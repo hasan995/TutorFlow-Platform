@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Clock, Users, Star } from 'lucide-react';
 
 const courses = [
@@ -59,6 +60,8 @@ const courses = [
 ];
 
 const ExploreCourses = () => {
+  const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem('accessToken');
   return (
     <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -110,7 +113,10 @@ const ExploreCourses = () => {
                   </div>
                 </div>
                 
-                <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                <button 
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+                onClick={() => navigate(isLoggedIn ? '/courses' : '/login')}
+                >
                   Enroll Now
                 </button>
               </div>

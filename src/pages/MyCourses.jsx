@@ -68,7 +68,8 @@ const MyCourses = () => {
 
       {enrollments.length === 0 ? (
         <div className="text-center text-gray-600">
-          <p className="mb-6">You are not enrolled in any courses yet.</p>
+          {role ==="instructor"? <p className="mb-6">you haven't created any courses yet.</p>:<p className="mb-6">You are not enrolled in any courses yet.</p>}
+         
           <button
             onClick={() => navigate("/courses")}
             className="px-5 py-2.5 rounded-lg border border-gray-300 hover:border-blue-400 hover:text-blue-600 transition"
