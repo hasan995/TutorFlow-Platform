@@ -74,8 +74,8 @@ const Navbar = () => {
             : "bg-white/70 backdrop-blur-sm border-transparent"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div>
+          <div className="flex items-center justify-around h-16">
             {/* Logo */}
             <div
               className="flex items-center space-x-2 cursor-pointer group"
@@ -90,12 +90,12 @@ const Navbar = () => {
             </div>
 
             {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center space-x-6">
+            <nav className="hidden md:flex items-center space-x-8">
               {navLinks.map((link) => (
                 <a
                   key={link.name}
                   href={link.href}
-                  className="flex items-center gap-1 text-gray-700 relative group transition-colors"
+                  className="flex items-center gap-2 px-2 py-2 text-gray-700 rounded-md relative group hover:text-blue-600 hover:bg-gray-50 transition-colors"
                 >
                   {link.icon}
                   {link.name}
@@ -105,25 +105,17 @@ const Navbar = () => {
               {isLoggedIn && (
                 <a
                   href="/mycourses"
-                  className="flex items-center gap-1 text-gray-700 relative group"
+                  className="flex items-center gap-2 px-2 py-2 text-gray-700 rounded-md relative group hover:text-blue-600 hover:bg-gray-50 transition-colors"
                 >
                   <User className="h-4 w-4" /> My Courses
                   <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-300 group-hover:w-full"></span>
                 </a>
               )}
-              {role === "instructor" && (
-                <button
-                  onClick={() => navigate("/courses/create")}
-                  className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition"
-                >
-                  <BookOpen className="h-4 w-4" />
-                  Create Course
-                </button>
-              )}
+              
             </nav>
 
             {/* Desktop Actions */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-6">
               {isLoggedIn ? (
                 <>
                   {/* Username Pill */}
@@ -149,13 +141,13 @@ const Navbar = () => {
                 <>
                   <button
                     onClick={() => navigate("/login")}
-                    className="px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors"
+                    className="px-4 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-colors"
                   >
                     Sign In
                   </button>
                   <button
                     onClick={() => navigate("/register")}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
                   >
                     Get Started
                   </button>
@@ -180,12 +172,12 @@ const Navbar = () => {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-200 shadow-lg animate-slideDown">
-            <div className="px-4 py-4 space-y-3">
+            <div className="px-4 py-4 space-y-4">
               {navLinks.map((link) => (
                 <a
                   key={link.name}
                   href={link.href}
-                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-2 p-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-colors"
                 >
                   {link.icon}
                   {link.name}
@@ -208,18 +200,7 @@ const Navbar = () => {
                   </div>
                 </>
               )}
-              {role === "instructor" && (
-                <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    navigate("/courses/create");
-                  }}
-                  className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white w-full px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition"
-                >
-                  <BookOpen className="h-4 w-4" />
-                  Create Course
-                </button>
-              )}
+              
               <div className="pt-3 border-t border-gray-200">
                 {isLoggedIn ? (
                   <button
