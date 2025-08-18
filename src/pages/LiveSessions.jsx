@@ -8,6 +8,7 @@ const Sessions = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem("accessToken");
 
   useEffect(() => {
     fetchSessions();
@@ -25,8 +26,11 @@ const Sessions = () => {
   };
 
   const handleCreate = async () => {
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
     setCreating(true);
-
     navigate(`/sessions/create`);
   };
 
@@ -42,7 +46,7 @@ const Sessions = () => {
           className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow hover:shadow-lg transition"
         >
           <Plus className="h-5 w-5" />
-          {creating ? "Creating..." : "Start Session"}
+          {creating ? "Creating..." : isLoggedIn ? "Start Session" : "Sign in to start"}
         </button>
       </div>
 
@@ -64,8 +68,18 @@ const Sessions = () => {
               <p className="text-sm text-gray-500 mb-4">
                 Hosted by {s.created_by_name || "Anonymous"}
               </p>
-              <button className="flex items-center gap-2 text-blue-600 font-medium">
-                <Video className="h-4 w-4" /> Join
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isLoggedIn) {
+                    navigate("/login");
+                    return;
+                  }
+                  navigate(`/sessions/${s.id}`);
+                }}
+                className="flex items-center gap-2 text-blue-600 font-medium"
+              >
+                <Video className="h-4 w-4" /> {isLoggedIn ? "Join" : "Login to join"}
               </button>
             </div>
           ))}

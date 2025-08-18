@@ -64,6 +64,7 @@ const CoursesPage = () => {
   const handleEnroll = async (id) => {
     if (!isLoggedIn) {
       alert("Please log in to enroll.");
+      navigate("/login");
       return;
     }
     try {

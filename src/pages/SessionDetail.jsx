@@ -1,16 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getSession, getJitsiToken } from "../api/api";
 import { JitsiMeeting } from "@jitsi/react-sdk";
 
 const SessionDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [session, setSession] = useState(null);
   const [jitsiToken, setJitsiToken] = useState(null);
   const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     const fetchData = async () => {
+      const isLoggedIn = !!localStorage.getItem("accessToken");
+      if (!isLoggedIn) {
+        navigate("/login");
+        return;
+      }
       try {
         // 1️⃣ Fetch session details
         const data = await getSession(id);

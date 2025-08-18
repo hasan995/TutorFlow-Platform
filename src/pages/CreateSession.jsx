@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createSession } from "../api/api";
 import { Video, Loader2 } from "lucide-react";
@@ -7,10 +7,21 @@ const CreateSession = () => {
   const [title, setTitle] = useState("");
   const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem("accessToken");
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    }
+  }, [isLoggedIn, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) return;
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
 
     setCreating(true);
     try {

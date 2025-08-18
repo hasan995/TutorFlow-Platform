@@ -13,6 +13,7 @@ import {
   Info,
   Phone,
   Library,
+  Video,
 } from "lucide-react";
 
 const Navbar = () => {
@@ -40,6 +41,11 @@ const Navbar = () => {
       name: "Courses",
       href: "/courses",
       icon: <Library className="h-4 w-4" />,
+    },
+    {
+      name: "Sessions",
+      href: "/sessions",
+      icon: <Video className="h-4 w-4" />,
     },
     {
       name: "Instructors",
