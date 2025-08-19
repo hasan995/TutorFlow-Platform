@@ -116,6 +116,24 @@ export const getStudentEnrollments = async (studentId) => {
   return res.data;
 };
 
+// Instructor: list created courses
+export const getInstructorCourses = async (instructorId) => {
+  const res = await api.get(`courses/instructors/${instructorId}/`);
+  return res.data.courses;
+};
+
+// Update a course
+export const updateCourse = async (id, data) => {
+  const res = await api.put(`courses/${id}/update/`, data);
+  return res.data;
+};
+
+// Delete a course
+export const deleteCourse = async (id) => {
+  const res = await api.delete(`courses/${id}/delete/`);
+  return res.data;
+};
+
 // ========== SESSIONS ENDPOINTS ==========
 export const getSessions = async () => {
   const res = await api.get("live/sessions/");

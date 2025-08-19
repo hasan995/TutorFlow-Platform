@@ -1,6 +1,7 @@
 // src/pages/CreateCourse.jsx
 import React, { useState, useEffect } from "react";
-import { getCategories, createCourse } from "../api/api";
+import { useSearchParams } from "react-router-dom";
+import { getCategories, createCourse, getCourse, updateCourse } from "../api/api";
 import {
   BookOpen,
   Loader2,
@@ -11,6 +12,9 @@ import {
 const CreateCourse = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isEdit, setIsEdit] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [courseCategoryName, setCourseCategoryName] = useState("");
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -20,6 +24,8 @@ const CreateCourse = () => {
   const [preview, setPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const fetchCats = async () => {
@@ -34,6 +40,38 @@ const CreateCourse = () => {
     };
     fetchCats();
   }, []);
+
+  // Load existing course when in edit mode (query param ?edit=<id>)
+  useEffect(() => {
+    const id = searchParams.get("edit");
+    if (!id) return;
+    (async () => {
+      try {
+        setIsEdit(true);
+        setEditId(id);
+        const data = await getCourse(id);
+        setForm((prev) => ({
+          ...prev,
+          title: data.title || "",
+          description: data.description || "",
+          // category will be set once categories are loaded
+        }));
+        setPreview(data.image || null);
+        setCourseCategoryName(data.category_name || "");
+      } catch (err) {
+        console.error("Failed to load course for editing", err);
+      }
+    })();
+  }, [searchParams]);
+
+  // Once categories are loaded, map category_name to its id for the select
+  useEffect(() => {
+    if (!isEdit || !courseCategoryName || categories.length === 0) return;
+    const matched = categories.find((c) => c.name === courseCategoryName);
+    if (matched) {
+      setForm((prev) => ({ ...prev, category: matched.id }));
+    }
+  }, [isEdit, courseCategoryName, categories]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -51,22 +89,27 @@ const CreateCourse = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append("title", form.title);
-      formData.append("description", form.description);
-      formData.append("category", form.category);
-      if (form.image) {
-        formData.append("image", form.image);
+      if (isEdit && editId) {
+        const payload = {
+          title: form.title,
+          description: form.description,
+          category: form.category,
+        };
+        await updateCourse(editId, payload);
+        setSuccess(true);
+      } else {
+        const formData = new FormData();
+        formData.append("title", form.title);
+        formData.append("description", form.description);
+        formData.append("category", form.category);
+        if (form.image) {
+          formData.append("image", form.image);
+        }
+        await createCourse(formData);
+        setSuccess(true);
+        setForm({ title: "", description: "", category: "", image: null });
+        setPreview(null);
       }
-
-      // Replace with your backend POST request
-      console.log("Submitting course:", Object.fromEntries(formData));
-      const res = await createCourse(formData);
-      console.log("Course created:", res, Object.fromEntries(formData));
-      console.log("Category:", form.category);
-      setSuccess(true);
-      setForm({ title: "", description: "", category: "", image: null });
-      setPreview(null);
     } catch (err) {
       console.error("Error creating course:", err);
     } finally {
@@ -82,7 +125,7 @@ const CreateCourse = () => {
             <BookOpen className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-800">
-            Create a New Course
+            {isEdit ? "Update Course" : "Create a New Course"}
           </h1>
         </div>
 
@@ -186,10 +229,10 @@ const CreateCourse = () => {
           >
             {submitting ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" /> Creating...
+                <Loader2 className="h-5 w-5 animate-spin" /> {isEdit ? "Updating..." : "Creating..."}
               </>
             ) : (
-              "Create Course"
+              isEdit ? "Update Course" : "Create Course"
             )}
           </button>
         </form>
