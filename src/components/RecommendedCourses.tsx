@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Clock, Users, Star, TrendingUp } from "lucide-react";
 
 const recommendedCourses = [
@@ -49,6 +50,7 @@ const recommendedCourses = [
 ];
 
 const RecommendedCourses = () => {
+  const navigate = useNavigate();
   return (
     <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -118,7 +120,10 @@ const RecommendedCourses = () => {
                   </div>
                 </div>
 
-                <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 text-sm">
+                <button
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 text-sm"
+                  onClick={() => navigate("/courses")}
+                >
                   Enroll Now
                 </button>
               </div>

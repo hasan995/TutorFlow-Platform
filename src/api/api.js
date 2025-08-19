@@ -134,6 +134,39 @@ export const deleteCourse = async (id) => {
   return res.data;
 };
 
+// ========== VIDEOS ENDPOINTS ==========
+export const getCourseVideos = async (courseId) => {
+  const res = await api.get(`courses/${courseId}/videos/`);
+  return res.data;
+};
+
+export const createCourseVideo = async (courseId, data) => {
+  const isFormData = data instanceof FormData;
+  const res = await api.post(`courses/${courseId}/videos/create/`, data, {
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined,
+  });
+  return res.data;
+};
+
+export const updateVideo = async (videoId, data) => {
+  const isFormData = data instanceof FormData;
+  const res = await api.put(`courses/videos/${videoId}/`, data, {
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined,
+  });
+  return res.data;
+};
+
+export const deleteVideo = async (videoId) => {
+  const res = await api.delete(`courses/videos/${videoId}/`);
+  return res.data;
+};
+
+// ========== EXAMS ENDPOINTS ==========
+export const createExam = async (payload) => {
+  const res = await api.post(`exams/exams/`, payload);
+  return res.data;
+};
+
 // ========== SESSIONS ENDPOINTS ==========
 export const getSessions = async () => {
   const res = await api.get("live/sessions/");

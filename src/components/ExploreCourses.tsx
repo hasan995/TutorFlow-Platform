@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, Users, Star } from "lucide-react";
-import { getCourses } from "../api/api"; // Adjust the import based on your API utility
+import { getCourses, enrollInCourse } from "../api/api"; // Adjust the import based on your API utility
 
 const ExploreCourses = () => {
   const navigate = useNavigate();
@@ -66,9 +66,19 @@ const ExploreCourses = () => {
 
                 <button
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-                  onClick={() =>
-                    navigate(isLoggedIn ? `/course/${course.id}` : "/login")
-                  }
+                  onClick={async () => {
+                    if (!isLoggedIn) {
+                      navigate("/login");
+                      return;
+                    }
+                    try {
+                      await enrollInCourse(course.id);
+                      navigate(`/courses/${course.id}`);
+                    } catch (e) {
+                      console.error(e);
+                      alert("Failed to enroll.");
+                    }
+                  }}
                 >
                   Enroll Now
                 </button>

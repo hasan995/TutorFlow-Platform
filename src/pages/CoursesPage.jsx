@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getCourses, getCategories } from "../api/api";
+import { getCourses, getCategories, enrollInCourse } from "../api/api";
 import { Search } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -71,9 +71,8 @@ const CoursesPage = () => {
       return;
     }
     try {
-      // await enrollCourse(id);
-      // alert("Enrolled successfully!");
-      navigate(`/course/${id}`);
+      await enrollInCourse(id);
+      navigate(`/courses/${id}`);
     } catch (err) {
       console.error("Failed to enroll", err);
       alert("Failed to enroll.");

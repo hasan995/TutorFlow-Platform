@@ -89,10 +89,10 @@ const MyCourses = () => {
                     <p className="text-sm text-gray-600 line-clamp-2 mb-3">{course.description}</p>
                     <div className="flex items-center justify-between">
                       <button
-                        onClick={() => navigate(`/course/${course.id}`)}
+                        onClick={() => navigate(`/courses/${course.id}`)}
                         className="text-blue-600 hover:underline"
                       >
-                        View
+                        manage your course
                       </button>
                       <div className="flex items-center gap-3">
                         <button
@@ -149,7 +149,7 @@ const MyCourses = () => {
             return (
               <div
                 key={course.id}
-                onClick={() => navigate(`/course/${course.id}`)}
+                onClick={() => navigate(`/courses/${course.id}`)}
                 className="bg-white/80 backdrop-blur-md rounded-2xl shadow-md cursor-pointer hover:shadow-xl transition transform hover:-translate-y-1 border border-gray-100 overflow-hidden group"
               >
                 <img
