@@ -58,7 +58,11 @@ export const getProfile = async () => {
 
 // Update Profile
 export const updateProfile = async (data) => {
-  const res = await api.put("auth/profile/update/", data);
+  const res = await api.put("auth/profile/update/", data, {
+    headers: {
+      "Content-Type": "multipart/form-data", // ✅ file uploads
+    },
+  });
   return res.data;
 };
 
@@ -130,7 +134,7 @@ export const getSession = async (id) => {
 
 export const getJitsiToken = async (roomName) => {
   const res = await api.post("live/jaas-token/", { room_name: roomName });
-  return res.data; 
+  return res.data;
 };
 
 export default api;

@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { getCourses, getCategories } from "../api/api";
 import { Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const CoursesPage = () => {
+  const [searchParams] = useSearchParams();
+  const categoryIdFromParams = searchParams.get("id");
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState(
+    categoryIdFromParams ? [parseInt(categoryIdFromParams)] : []
+  );
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
@@ -43,9 +47,8 @@ const CoursesPage = () => {
         console.log("Courses data: ", data.results);
 
         // 👇 small delay before removing skeleton (300–500ms feels natural)
-        setTimeout(() => {
-          setLoading(false);
-        }, 400);
+
+        setLoading(false);
       } catch (err) {
         console.error("Failed to load courses", err);
         setLoading(false);
@@ -157,7 +160,7 @@ const CoursesPage = () => {
                     By {course.instructor_name || "Unknown Instructor"}
                   </p>
                   <p className="text-xs text-gray-500 mb-4">
-                    {course.category}
+                    {course.category_name}
                   </p>
                   {course.is_enrolled ? (
                     <button

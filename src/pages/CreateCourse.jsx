@@ -62,7 +62,8 @@ const CreateCourse = () => {
       // Replace with your backend POST request
       console.log("Submitting course:", Object.fromEntries(formData));
       const res = await createCourse(formData);
-      console.log("Course created:", res, formData);
+      console.log("Course created:", res, Object.fromEntries(formData));
+      console.log("Category:", form.category);
       setSuccess(true);
       setForm({ title: "", description: "", category: "", image: null });
       setPreview(null);

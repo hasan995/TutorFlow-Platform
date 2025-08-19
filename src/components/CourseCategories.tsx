@@ -9,6 +9,7 @@ import {
   Languages,
   Layers,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 type Category = {
   id: number;
@@ -37,6 +38,7 @@ const colorMap: Record<string, string> = {
 const CourseCategories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -83,6 +85,9 @@ const CourseCategories = () => {
             return (
               <div
                 key={category.id}
+                onClick={() => {
+                  navigate("courses?id=" + category.id);
+                }}
                 className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden cursor-pointer"
               >
                 <div className="relative h-48 overflow-hidden">

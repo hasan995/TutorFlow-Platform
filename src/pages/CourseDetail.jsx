@@ -65,13 +65,8 @@ const CourseDetail = () => {
 
     setEnrolling(true);
     try {
-      if (isEnrolled) {
-        await withdrawFromCourse(id);
-        setIsEnrolled(false);
-      } else {
-        await enrollInCourse(id);
-        setIsEnrolled(true);
-      }
+      await enrollInCourse(id);
+      navigate("/courses/" + id);
     } catch (error) {
       console.error("Enrollment action failed", error);
       alert("❌ Something went wrong, please try again.");
@@ -112,7 +107,7 @@ const CourseDetail = () => {
           <div className="flex flex-wrap items-center gap-6 mb-8">
             <span className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
               <BookOpen className="h-4 w-4" />{" "}
-              {course.category?.name || "Uncategorized"}
+              {course.category_name || "Uncategorized"}
             </span>
 
             <button
@@ -129,7 +124,7 @@ const CourseDetail = () => {
           {/* Enroll/Withdraw button */}
           <button
             onClick={handleEnrollment}
-            disabled={enrolling}
+            // disabled={enrolling}
             className={`px-8 py-3 rounded-xl font-semibold text-white shadow-md transition-all duration-300 transform ${
               enrolling
                 ? "bg-gray-400 cursor-not-allowed"
@@ -138,11 +133,7 @@ const CourseDetail = () => {
                 : "bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:-translate-y-0.5"
             }`}
           >
-            {enrolling
-              ? "Processing..."
-              : isEnrolled
-              ? "❌ Withdraw"
-              : "🚀 Enroll Now"}
+            {enrolling ? "Processing..." : "Enroll Now"}
           </button>
         </div>
       </div>
