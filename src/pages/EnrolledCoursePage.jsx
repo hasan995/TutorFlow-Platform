@@ -92,13 +92,13 @@ const CourseDetailsPage = () => {
       <div className="flex-1 bg-white rounded-2xl shadow-xl p-8">
         {activeTab === "overview" && (
           <div>
-            <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col md:flex-row gap-8">
               <img
                 src={course.image}
                 alt={course.title}
                 className="w-full md:w-72 h-48 object-cover rounded-xl shadow-md"
               />
-              <div>
+              <div className="flex-1">
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   {course.title}
                 </h2>
@@ -112,7 +112,7 @@ const CourseDetailsPage = () => {
                   {course.description}
                 </p>
 
-                {user?.role === "student" && (
+                {course.is_enrolled && (
                   <button
                     onClick={() => setShowPopup(true)}
                     className="mt-6 px-6 py-2 rounded-lg bg-red-500 text-white font-semibold shadow-md hover:bg-red-600 transition"
