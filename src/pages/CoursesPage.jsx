@@ -12,6 +12,8 @@ const CoursesPage = () => {
     categoryIdFromParams ? [parseInt(categoryIdFromParams)] : []
   );
   const [search, setSearch] = useState("");
+  const [price, setPrice] = useState("");
+  const [instructor, setInstructor] = useState("");
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -41,6 +43,8 @@ const CoursesPage = () => {
         if (selectedCategories.length > 0) {
           params.category = selectedCategories;
         }
+        if (price !== "") params.price = price;
+        if (instructor.trim() !== "") params.instructor = instructor.trim();
 
         const data = await getCourses(params);
         setCourses(data.results);
@@ -56,7 +60,7 @@ const CoursesPage = () => {
       }
     };
     fetchCourses();
-  }, [search, selectedCategories, page]);
+  }, [search, selectedCategories, price, instructor, page]);
 
   const toggleCategory = (id) => {
     setPage(1);
@@ -84,22 +88,58 @@ const CoursesPage = () => {
     <div className="flex max-w-7xl mx-auto px-4 py-12 gap-8 mt-11">
       {/* Sidebar Filters */}
       <aside className="w-64 bg-white p-6 rounded-2xl shadow-lg h-fit">
-        <h3 className="font-bold text-lg mb-4">Filter by Category</h3>
-        <div className="space-y-3">
-          {categories.map((cat) => (
-            <label
-              key={cat.id}
-              className="flex items-center space-x-2 cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={selectedCategories.includes(cat.id)}
-                onChange={() => toggleCategory(cat.id)}
-                className="rounded"
-              />
-              <span>{cat.name}</span>
-            </label>
-          ))}
+        <h3 className="font-bold text-lg mb-4">Filters</h3>
+        <div className="space-y-5">
+          <div>
+            <h4 className="font-semibold text-sm text-gray-700 mb-2">Category</h4>
+            <div className="space-y-3 max-h-64 overflow-auto pr-2">
+              {categories.map((cat) => (
+                <label
+                  key={cat.id}
+                  className="flex items-center space-x-2 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCategories.includes(cat.id)}
+                    onChange={() => {
+                      toggleCategory(cat.id);
+                    }}
+                    className="rounded"
+                  />
+                  <span>{cat.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-sm text-gray-700 mb-2">Price</h4>
+            <input
+              type="number"
+              min="0"
+              placeholder="Enter price"
+              value={price}
+              onChange={(e) => {
+                setPrice(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-3 py-2 border rounded-lg"
+            />
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-sm text-gray-700 mb-2">Instructor</h4>
+            <input
+              type="text"
+              placeholder="Instructor Name"
+              value={instructor}
+              onChange={(e) => {
+                setInstructor(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-3 py-2 border rounded-lg"
+            />
+          </div>
         </div>
       </aside>
 
@@ -150,7 +190,7 @@ const CoursesPage = () => {
                 className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition"
               >
                 <img
-                  src={course.image}
+                  src={course.image || "https://via.placeholder.com/640x360?text=Course"}
                   alt={course.title}
                   className="w-full h-40 object-cover"
                 />
@@ -160,7 +200,9 @@ const CoursesPage = () => {
                     By {course.instructor_name || "Unknown Instructor"}
                   </p>
                   <p className="text-xs text-gray-500 mb-4">
-                    {course.category_name}
+                    {course.category_name} {course.price !== undefined && (
+                      <span className="ml-2 font-semibold text-gray-700">${Number(course.price).toFixed(2)}</span>
+                    )}
                   </p>
                   {course.is_enrolled ? (
                     <button
