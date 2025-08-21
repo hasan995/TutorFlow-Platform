@@ -9,6 +9,7 @@ import {
   getStudentEnrollments,
 } from "../api/api";
 import { BookOpen, GraduationCap, Loader2, ArrowRight } from "lucide-react";
+import CourseUpdateButton from "../components/CourseUpdateButton";
 
 const CourseDetail = () => {
   const { id } = useParams();
@@ -87,6 +88,9 @@ const CourseDetail = () => {
     return <p className="text-center text-gray-600">Course not found.</p>;
   }
 
+  const isInstructor =
+    user?.role === "instructor" && course.instructor?.id === user?.id;
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 mt-16">
       {/* Course Hero */}
@@ -121,20 +125,30 @@ const CourseDetail = () => {
             </button>
           </div>
 
-          {/* Enroll/Withdraw button */}
-          <button
-            onClick={handleEnrollment}
-            // disabled={enrolling}
-            className={`px-8 py-3 rounded-xl font-semibold text-white shadow-md transition-all duration-300 transform ${
-              enrolling
-                ? "bg-gray-400 cursor-not-allowed"
-                : isEnrolled
-                ? "bg-gradient-to-r from-red-500 to-pink-500 hover:shadow-lg hover:-translate-y-0.5"
-                : "bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:-translate-y-0.5"
-            }`}
-          >
-            {enrolling ? "Processing..." : "Enroll Now"}
-          </button>
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Enroll/Withdraw button */}
+            <button
+              onClick={handleEnrollment}
+              // disabled={enrolling}
+              className={`px-8 py-3 rounded-xl font-semibold text-white shadow-md transition-all duration-300 transform ${
+                enrolling
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : isEnrolled
+                  ? "bg-gradient-to-r from-red-500 to-pink-500 hover:shadow-lg hover:-translate-y-0.5"
+                  : "bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:-translate-y-0.5"
+              }`}
+            >
+              {enrolling ? "Processing..." : "Enroll Now"}
+            </button>
+
+            {/* Notification Button for Instructors */}
+            <CourseUpdateButton
+              courseId={parseInt(id)}
+              courseTitle={course.title}
+              isInstructor={isInstructor}
+            />
+          </div>
         </div>
       </div>
 

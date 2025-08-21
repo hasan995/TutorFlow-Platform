@@ -15,6 +15,7 @@ import {
   Library,
   Video,
 } from "lucide-react";
+import NotificationBell from "./NotificationBell";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -67,21 +68,18 @@ const Navbar = () => {
   return (
     <>
       {/* NAVBAR */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-40 border-b transition-all duration-300 ${
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-white/95 backdrop-blur-md shadow-md border-gray-200"
-            : "bg-white/70 backdrop-blur-sm border-transparent"
+            ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200"
+            : "bg-white"
         }`}
       >
-        <div>
-          <div className="flex items-center justify-around h-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <div
-              className="flex items-center space-x-2 cursor-pointer group"
-              onClick={() => navigate("/")}
-            >
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg shadow-md transition-transform duration-300 group-hover:scale-110">
+            <div className="flex items-center space-x-2">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
                 <BookOpen className="h-6 w-6 text-white" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -89,170 +87,143 @@ const Navbar = () => {
               </span>
             </div>
 
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center space-x-8">
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
               {navLinks.map((link) => (
                 <a
                   key={link.name}
                   href={link.href}
-                  className="flex items-center gap-2 px-2 py-2 text-gray-700 rounded-md relative group hover:text-blue-600 hover:bg-gray-50 transition-colors"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors"
                 >
                   {link.icon}
-                  {link.name}
-                  <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-300 group-hover:w-full"></span>
+                  <span>{link.name}</span>
                 </a>
               ))}
-              {isLoggedIn && (
-                <a
-                  href="/mycourses"
-                  className="flex items-center gap-2 px-2 py-2 text-gray-700 rounded-md relative group hover:text-blue-600 hover:bg-gray-50 transition-colors"
-                >
-                  <User className="h-4 w-4" /> My Courses
-                  <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-300 group-hover:w-full"></span>
-                </a>
-              )}
-              
-            </nav>
-
-            {/* Desktop Actions */}
-            <div className="hidden md:flex items-center space-x-6">
-              {isLoggedIn ? (
-                <>
-                  {/* Username Pill */}
-                  <div
-                    onClick={() => navigate("/profile")}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full shadow-sm hover:shadow-md transition cursor-pointer"
-                  >
-                    <User className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      {username}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => setShowLogoutConfirm(true)}
-                    className="flex items-center gap-2 text-gray-700 hover:text-red-600 transition-colors"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => navigate("/login")}
-                    className="px-4 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-colors"
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    onClick={() => navigate("/register")}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
-                  >
-                    Get Started
-                  </button>
-                </>
-              )}
             </div>
 
-            {/* Mobile Button */}
-            <button
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? (
-                <X className="h-6 w-6 text-gray-700" />
+            {/* User Actions */}
+            <div className="flex items-center space-x-4">
+              {isLoggedIn ? (
+                <>
+                  {/* Notification Bell */}
+                  <NotificationBell />
+
+                  {/* User Menu */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsMenuOpen(!isMenuOpen)}
+                      className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
+                    >
+                      <User className="h-5 w-5" />
+                      <span className="hidden sm:block">{username}</span>
+                    </button>
+
+                    {isMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+                        <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-100">
+                          {role === "instructor" ? "Instructor" : "Student"}
+                        </div>
+                        <a
+                          href="/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          Profile
+                        </a>
+                        <a
+                          href="/mycourses"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          My Courses
+                        </a>
+                        <button
+                          onClick={() => setShowLogoutConfirm(true)}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
               ) : (
-                <Menu className="h-6 w-6 text-gray-700" />
+                <div className="flex items-center space-x-4">
+                  <a
+                    href="/login"
+                    className="text-gray-700 hover:text-blue-600 transition-colors"
+                  >
+                    Login
+                  </a>
+                  <a
+                    href="/register"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+                  >
+                    Sign Up
+                  </a>
+                </div>
               )}
-            </button>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden p-2 text-gray-700 hover:text-blue-600"
+              >
+                {isMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200 shadow-lg animate-slideDown">
-            <div className="px-4 py-4 space-y-4">
+          <div className="md:hidden bg-white border-t border-gray-200">
+            <div className="px-4 py-2 space-y-1">
               {navLinks.map((link) => (
                 <a
                   key={link.name}
                   href={link.href}
-                  className="flex items-center gap-2 p-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-gray-100 transition-colors"
+                  className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
                 >
                   {link.icon}
-                  {link.name}
+                  <span>{link.name}</span>
                 </a>
               ))}
-              {isLoggedIn && (
-                <>
-                  {/* Mobile Username */}
-                  <div
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      navigate("/profile");
-                    }}
-                    className="flex items-center gap-2 p-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition"
-                  >
-                    <User className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium text-gray-800">
-                      {username}
-                    </span>
-                  </div>
-                </>
-              )}
-              
-              <div className="pt-3 border-t border-gray-200">
-                {isLoggedIn ? (
-                  <button
-                    onClick={() => setShowLogoutConfirm(true)}
-                    className="flex items-center gap-2 text-red-600 w-full text-left"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    Logout
-                  </button>
-                ) : (
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => navigate("/login")}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-600 transition-colors"
-                    >
-                      Sign In
-                    </button>
-                    <button
-                      onClick={() => navigate("/register")}
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg"
-                    >
-                      Get Started
-                    </button>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         )}
-      </header>
+      </nav>
 
-      {/* LOGOUT MODAL */}
+      {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full text-center animate-fadeIn">
-            <LogOut className="h-12 w-12 text-red-500 mx-auto mb-4 animate-pulse" />
-            <h2 className="text-lg font-semibold mb-2">Confirm Logout</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="bg-red-100 p-2 rounded-full">
+                <LogOut className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Confirm Logout
+              </h3>
+            </div>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to log out?
+              Are you sure you want to logout? You'll need to sign in again to
+              access your account.
             </p>
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
-              >
-                <Check className="h-4 w-4" /> Yes, Logout
-              </button>
+            <div className="flex space-x-3">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
-                className="flex items-center gap-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
-                <XCircle className="h-4 w-4" /> Cancel
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Logout
               </button>
             </div>
           </div>
