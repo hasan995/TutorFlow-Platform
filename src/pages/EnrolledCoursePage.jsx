@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCourse, withdrawFromCourse, createCourseVideo, createExam, deleteCourse, updateCourse, getCategories } from "../api/api";
-import { BookOpen, Star, FileText, Video, Pencil, Trash2, Save, X, Layers, User, Users, Image as ImageIcon } from "lucide-react";
+import { BookOpen, Star, FileText, Video, Pencil, Trash2, Save, X, Layers, User, Users, Image as ImageIcon, SkipBack, SkipForward, PlayCircle } from "lucide-react";
 
 const CourseDetailsPage = () => {
   const { id } = useParams();
@@ -19,6 +19,24 @@ const CourseDetailsPage = () => {
   const [editedCourse, setEditedCourse] = useState({ title: "", description: "", category: "", image: null });
   const [categories, setCategories] = useState([]);
   const [preview, setPreview] = useState(null);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+
+  const currentVideo = useMemo(() => {
+    if (!Array.isArray(course?.videos) || course.videos.length === 0) return null;
+    const index = Math.min(Math.max(currentVideoIndex, 0), course.videos.length - 1);
+    return course.videos[index];
+  }, [course, currentVideoIndex]);
+
+  const getEmbedUrl = (url) => {
+    if (!url) return null;
+    try {
+      const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+      if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+      const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+      if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    } catch (_) {}
+    return null;
+  };
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -132,24 +150,12 @@ const CourseDetailsPage = () => {
   const handleAddVideo = async (e) => {
     e.preventDefault();
     try {
-      let payload;
-      const fileInput = e.target.querySelector('input[type="file"]');
-      const file = fileInput?.files?.[0];
-      if (file) {
-        payload = new FormData();
-        payload.append('title', videoForm.title);
-        if (videoForm.url) payload.append('url', videoForm.url);
-        if (videoForm.description) payload.append('description', videoForm.description);
-        payload.append('order', String(parseInt(videoForm.order || 0, 10)));
-        payload.append('file', file);
-      } else {
-        payload = {
-          title: videoForm.title,
-          url: videoForm.url,
-          description: videoForm.description,
-          order: parseInt(videoForm.order || 0, 10),
-        };
-      }
+      const payload = {
+        title: videoForm.title,
+        url: videoForm.url,
+        description: videoForm.description,
+        order: parseInt(videoForm.order || 0, 10),
+      };
       const created = await createCourseVideo(id, payload);
       setCourse((prev) => ({ ...prev, videos: [...(prev.videos || []), created] }));
       setAddingVideo(false);
@@ -411,48 +417,56 @@ const CourseDetailsPage = () => {
                 >
                   {addingVideo ? "Cancel" : "Add Video"}
                 </button>
-                <button
-                  onClick={handleCreateExam}
-                  className="px-5 py-2 rounded-lg bg-purple-600 text-white font-semibold shadow-md hover:bg-purple-700 transition"
-                >
-                  Create Exam
-                </button>
               </div>
             )}
 
             {isOwnerInstructor && addingVideo && (
-              <form onSubmit={handleAddVideo} className="mb-8 grid gap-4 max-w-xl">
-                <input
-                  type="text"
-                  placeholder="Video title"
-                  value={videoForm.title}
-                  onChange={(e) => setVideoForm({ ...videoForm, title: e.target.value })}
-                  className="border rounded-lg px-3 py-2"
-                  required
-                />
-                <input
-                  type="url"
-                  placeholder="Video URL (e.g. https://...)"
-                  value={videoForm.url}
-                  onChange={(e) => setVideoForm({ ...videoForm, url: e.target.value })}
-                  className="border rounded-lg px-3 py-2"
-                />
-                <input type="file" accept="video/*" className="border rounded-lg px-3 py-2" />
-                <textarea
-                  placeholder="Description (optional)"
-                  value={videoForm.description}
-                  onChange={(e) => setVideoForm({ ...videoForm, description: e.target.value })}
-                  className="border rounded-lg px-3 py-2"
-                  rows={3}
-                />
-                <input
-                  type="number"
-                  placeholder="Order (optional)"
-                  value={videoForm.order}
-                  onChange={(e) => setVideoForm({ ...videoForm, order: e.target.value })}
-                  className="border rounded-lg px-3 py-2"
-                  min={0}
-                />
+              <form onSubmit={handleAddVideo} className="mb-8 grid gap-4 max-w-xl bg-white border rounded-xl p-4 shadow-sm">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Video title</label>
+                  <input
+                    type="text"
+                    placeholder="Intro to React"
+                    value={videoForm.title}
+                    onChange={(e) => setVideoForm({ ...videoForm, title: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Video URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={videoForm.url}
+                    onChange={(e) => setVideoForm({ ...videoForm, url: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+                  <textarea
+                    placeholder="What will students learn in this video?"
+                    value={videoForm.description}
+                    onChange={(e) => setVideoForm({ ...videoForm, description: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2"
+                    rows={3}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Order (optional)</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={videoForm.order}
+                      onChange={(e) => setVideoForm({ ...videoForm, order: e.target.value })}
+                      className="w-full border rounded-lg px-3 py-2"
+                      min={0}
+                    />
+                  </div>
+                </div>
                 <div>
                   <button type="submit" className="px-6 py-2 rounded-lg bg-green-600 text-white font-semibold shadow-md hover:bg-green-700 transition">
                     Save Video
@@ -462,37 +476,90 @@ const CourseDetailsPage = () => {
             )}
 
             {Array.isArray(course.videos) && course.videos.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {course.videos.map((v) => (
-                  <div key={v.id} className="bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition h-full flex flex-col">
-                    <div className="flex items-center gap-2 mb-2 text-gray-700">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-gray-600">
-                        <Video className="w-4 h-4" />
-                      </span>
-                      <p className="font-semibold truncate" title={v.title}>{v.title}</p>
-                      {typeof v.order !== "undefined" && (
-                        <span className="ml-auto text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-600">#{v.order}</span>
-                      )}
-                    </div>
-                    {v.file ? (
-                      <video controls className="w-full rounded aspect-video bg-black/5" src={v.file} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Player */}
+                <div className="lg:col-span-2 bg-white rounded-xl border shadow-sm p-4">
+                  <div className="aspect-video w-full overflow-hidden rounded-lg bg-black/5">
+                    {currentVideo?.file ? (
+                      <video key={currentVideo.file} controls className="w-full h-full" src={currentVideo.file} />
+                    ) : currentVideo?.url && getEmbedUrl(currentVideo.url) ? (
+                      <iframe
+                        key={currentVideo.url}
+                        src={getEmbedUrl(currentVideo.url)}
+                        title={currentVideo.title}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                      />
+                    ) : currentVideo?.url ? (
+                      <video key={currentVideo.url} controls className="w-full h-full" src={currentVideo.url} />
                     ) : (
-                      v.url && (
-                        <a
-                          href={v.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-blue-600 text-sm break-all underline"
-                        >
-                          {v.url}
-                        </a>
-                      )
-                    )}
-                    {v.description && (
-                      <p className="text-sm text-gray-600 mt-2 line-clamp-3">{v.description}</p>
+                      <div className="w-full h-full flex items-center justify-center text-gray-500">No video source</div>
                     )}
                   </div>
-                ))}
+                  <div className="mt-3 flex items-center justify-between">
+                    <button
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+                      onClick={() => setCurrentVideoIndex((i) => Math.max(i - 1, 0))}
+                      disabled={currentVideoIndex === 0}
+                    >
+                      <SkipBack className="w-4 h-4" /> Previous
+                    </button>
+                    <div className="text-sm text-gray-600">
+                      {currentVideoIndex + 1} / {course.videos.length}
+                    </div>
+                    <button
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+                      onClick={() => setCurrentVideoIndex((i) => Math.min(i + 1, course.videos.length - 1))}
+                      disabled={currentVideoIndex >= course.videos.length - 1}
+                    >
+                      Next <SkipForward className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {/* Video details */}
+                  <div className="mt-4 border-t pt-4">
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      {currentVideo?.title || "Untitled video"}
+                    </h3>
+                    {currentVideo?.description && (
+                      <p className="mt-1 text-gray-600">{currentVideo.description}</p>
+                    )}
+                    <div className="mt-2 text-sm text-gray-500 flex gap-4 flex-wrap">
+                      {typeof currentVideo?.order !== "undefined" && (
+                        <span>Order: #{currentVideo.order}</span>
+                      )}
+                      
+                    </div>
+                  </div>
+                </div>
+
+                {/* Playlist */}
+                <aside className="bg-white rounded-xl border shadow-sm p-3 max-h-[60vh] overflow-y-auto">
+                  <div className="text-sm font-semibold text-gray-700 mb-2">Playlist</div>
+                  <div className="space-y-2">
+                    {course.videos.map((v, idx) => {
+                      const isActive = idx === currentVideoIndex;
+                      return (
+                        <button
+                          key={v.id}
+                          onClick={() => setCurrentVideoIndex(idx)}
+                          className={`w-full text-left p-2 rounded-lg border flex items-center gap-3 ${isActive ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'}`}
+                        >
+                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${isActive ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                            <PlayCircle className="w-4 h-4" />
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{v.title}</p>
+                            {typeof v.order !== 'undefined' && (
+                              <p className="text-xs text-gray-500">#{v.order}</p>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </aside>
               </div>
             ) : (
               <p className="text-gray-500">No videos yet.</p>
