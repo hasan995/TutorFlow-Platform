@@ -16,6 +16,7 @@ const CoursesPage = () => {
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const isLoggedIn = !!localStorage.getItem("accessToken");
 
@@ -183,6 +184,15 @@ const CoursesPage = () => {
                         />
                       </svg>
                       Already Enrolled
+                    </button>
+                  ) : course.instructor === user?.id ? (
+                    <button
+                      onClick={() => navigate("/courses/" + course.id)}
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 rounded-xl font-semibold 
+      shadow-md hover:shadow-lg transition-all duration-300 
+      hover:scale-[1.03] active:scale-[0.97]"
+                    >
+                      View Course
                     </button>
                   ) : (
                     <button
