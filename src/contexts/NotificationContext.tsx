@@ -5,16 +5,19 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import { io, Socket } from "socket.io-client";
 
 interface Notification {
   id: number;
+  sender?: number; // Optional for system notifications
+  sender_name?: string;
+  receiver: number;
+  receiver_name: string;
   title: string;
   message: string;
   notification_type: string;
   is_read: boolean;
   created_at: string;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 interface NotificationContextType {
@@ -35,7 +38,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<
     "connecting" | "connected" | "disconnected" | "error"
@@ -43,60 +46,123 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Initialize WebSocket connection
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
+    // Try different possible token keys
+    let token = localStorage.getItem("accessToken");
+    if (!token) {
+      token = localStorage.getItem("token");
+    }
+    if (!token) {
+      token = localStorage.getItem("authToken");
+    }
+    if (!token) {
+      token = localStorage.getItem("jwt");
+    }
+
+    console.log("🔔 Token from localStorage:", token ? "Found" : "Not found");
+    console.log("🔔 Available localStorage keys:", Object.keys(localStorage));
+
     if (token) {
       setConnectionStatus("connecting");
+      console.log("🔔 Attempting WebSocket connection...");
 
-      // Create WebSocket connection
-      const newSocket = io("ws://localhost:8000", {
-        path: "/ws/notifications/",
-        auth: { token },
-        transports: ["websocket"],
-        autoConnect: true,
-      });
+      // Add a small delay to ensure server is ready
+      const connectTimeout = setTimeout(() => {
+        try {
+          // Create native WebSocket connection
+          const newSocket = new WebSocket(
+            `ws://localhost:8000/ws/notifications/`
+          );
 
-      newSocket.on("connect", () => {
-        console.log("🔔 Connected to notification WebSocket");
-        setIsConnected(true);
-        setConnectionStatus("connected");
-      });
+          newSocket.onopen = () => {
+            console.log("🔔 Connected to notification WebSocket");
+            setIsConnected(true);
+            setConnectionStatus("connected");
 
-      newSocket.on("disconnect", () => {
-        console.log("🔔 Disconnected from notification WebSocket");
-        setIsConnected(false);
-        setConnectionStatus("disconnected");
-      });
+            // Send authentication token
+            const authMessage = {
+              type: "auth",
+              token: token,
+            };
+            console.log("🔔 Sending auth message:", authMessage);
+            newSocket.send(JSON.stringify(authMessage));
+          };
 
-      newSocket.on("connect_error", (error) => {
-        console.error("🔔 WebSocket connection error:", error);
-        setConnectionStatus("error");
-        setIsConnected(false);
-      });
+          newSocket.onclose = (event) => {
+            console.log(
+              "🔔 Disconnected from notification WebSocket",
+              event.code,
+              event.reason
+            );
+            setIsConnected(false);
+            setConnectionStatus("disconnected");
 
-      // Listen for incoming notifications
-      newSocket.on("notification", (data: Notification) => {
-        console.log("🔔 Received notification:", data);
-        setNotifications((prev) => [data, ...prev]);
+            // If connection was closed due to server error, try to reconnect after 5 seconds
+            if (event.code === 1006 || event.code === 1011) {
+              console.log(
+                "🔔 WebSocket connection failed, will retry in 5 seconds..."
+              );
+              setTimeout(() => {
+                setConnectionStatus("connecting");
+              }, 5000);
+            }
+          };
 
-        // Show browser notification if permission granted
-        if (Notification.permission === "granted") {
-          new Notification(data.title, {
-            body: data.message,
-            icon: "/favicon.ico",
-            tag: `notification-${data.id}`,
-          });
+          newSocket.onerror = (error) => {
+            console.error("🔔 WebSocket connection error:", error);
+            setConnectionStatus("error");
+            setIsConnected(false);
+          };
+
+          newSocket.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              console.log("🔔 Received WebSocket message:", data);
+
+              if (data.type === "notification") {
+                console.log("🔔 Received notification:", data.notification);
+                setNotifications((prev) => [data.notification, ...prev]);
+
+                // Show browser notification if permission granted
+                if (Notification.permission === "granted") {
+                  new Notification(data.notification.title, {
+                    body: data.notification.message,
+                    icon: "/favicon.ico",
+                    tag: `notification-${data.notification.id}`,
+                  });
+                }
+              } else if (data.type === "auth_success") {
+                console.log("🔔 WebSocket authentication successful");
+                setConnectionStatus("connected");
+              } else if (data.type === "auth_error") {
+                console.error(
+                  "🔔 WebSocket authentication failed:",
+                  data.message
+                );
+                setConnectionStatus("error");
+                setIsConnected(false);
+              }
+            } catch (error) {
+              console.error("Failed to parse WebSocket message:", error);
+            }
+          };
+
+          setSocket(newSocket);
+
+          // Request notification permission
+          if (Notification.permission === "default") {
+            Notification.requestPermission();
+          }
+        } catch (error) {
+          console.error("🔔 Error creating WebSocket:", error);
+          setConnectionStatus("error");
         }
-      });
-
-      setSocket(newSocket);
-
-      // Request notification permission
-      if (Notification.permission === "default") {
-        Notification.requestPermission();
-      }
+      }, 1000); // 1 second delay
 
       return () => {
-        newSocket.close();
+        clearTimeout(connectTimeout);
+        if (socket) {
+          socket.close();
+        }
       };
     }
   }, []);

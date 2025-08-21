@@ -45,6 +45,19 @@ const NotificationBell = () => {
     }
   };
 
+  const getConnectionStatusText = () => {
+    switch (connectionStatus) {
+      case "connected":
+        return "Real-time notifications enabled";
+      case "connecting":
+        return "Connecting to notifications...";
+      case "error":
+        return "Connection failed - notifications may be delayed";
+      default:
+        return "Notifications offline";
+    }
+  };
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "course_enrollment":
@@ -98,26 +111,31 @@ const NotificationBell = () => {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-gray-800">Notifications</h3>
-              {getConnectionStatusIcon()}
-            </div>
-            <div className="flex items-center gap-2">
-              {unreadCount > 0 && (
+          <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-gray-800">Notifications</h3>
+                {getConnectionStatusIcon()}
+              </div>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    Mark all read
+                  </button>
+                )}
                 <button
-                  onClick={markAllAsRead}
-                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  onClick={() => setIsOpen(false)}
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  Mark all read
+                  <X className="h-4 w-4" />
                 </button>
-              )}
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              </div>
+            </div>
+            <div className="text-xs text-gray-500 flex items-center gap-1">
+              {getConnectionStatusText()}
             </div>
           </div>
 

@@ -2,6 +2,10 @@ import api from "../api/api";
 
 export interface Notification {
   id: number;
+  sender?: number; // Optional for system notifications
+  sender_name?: string;
+  receiver: number;
+  receiver_name: string;
   title: string;
   message: string;
   notification_type: string;
