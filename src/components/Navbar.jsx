@@ -47,11 +47,6 @@ const Navbar = () => {
       href: "/sessions",
       icon: <Video className="h-4 w-4" />,
     },
-    {
-      name: "Instructors",
-      href: "#",
-      icon: <GraduationCap className="h-4 w-4" />,
-    },
     { name: "About", href: "/about", icon: <Info className="h-4 w-4" /> },
     { name: "Contact", href: "/contact", icon: <Phone className="h-4 w-4" /> },
   ];

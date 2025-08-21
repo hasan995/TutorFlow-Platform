@@ -7,7 +7,7 @@ import {
   deleteCourse,
   withdrawFromCourse,
 } from "../api/api";
-import { Loader2, ArrowRight, BookOpen } from "lucide-react";
+import { Loader2, ArrowRight, BookOpen, ArrowRightCircle, Layers, User, BadgeCheck } from "lucide-react";
 
 const MyCourses = () => {
   const [enrollments, setEnrollments] = useState([]);
@@ -93,13 +93,18 @@ const MyCourses = () => {
               {createdCourses.map((course) => (
                 <div
                   key={course.id}
-                  className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden"
+                  className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden group hover:shadow-xl transition"
                 >
-                  <img
-                    src={course.image || "https://via.placeholder.com/400x200"}
-                    alt={course.title}
-                    className="w-full h-44 object-cover"
-                  />
+                  <div className="relative">
+                    <img
+                      src={course.image || "https://via.placeholder.com/400x200"}
+                      alt={course.title}
+                      className="w-full h-44 object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                    />
+                    <span className="absolute top-2 left-2 inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md bg-white/90 text-gray-800 shadow">
+                      <BookOpen className="h-3.5 w-3.5" /> Instructor
+                    </span>
+                  </div>
                   <div className="p-5">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       {course.title}
@@ -107,45 +112,24 @@ const MyCourses = () => {
                     <p className="text-sm text-gray-600 line-clamp-2 mb-3">
                       {course.description}
                     </p>
-                    <div className="flex items-center justify-between">
-                      <button
-                        onClick={() => navigate(`/courses/${course.id}`)}
-                        className="text-blue-600 hover:underline"
-                      >
-                        manage your course
-                      </button>
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() =>
-                            navigate(`/courses/create?edit=${course.id}`)
-                          }
-                          className="px-3 py-1.5 rounded-md bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                        >
-                          Update
-                        </button>
-                        <button
-                          onClick={async () => {
-                            if (!window.confirm("Delete this course?")) return;
-                            try {
-                              setDeletingId(course.id);
-                              await deleteCourse(course.id);
-                              setCreatedCourses((prev) =>
-                                prev.filter((c) => c.id !== course.id)
-                              );
-                            } catch (e) {
-                              console.error(e);
-                              alert("Failed to delete course");
-                            } finally {
-                              setDeletingId(null);
-                            }
-                          }}
-                          disabled={deletingId === course.id}
-                          className="px-3 py-1.5 rounded-md bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-60"
-                        >
-                          {deletingId === course.id ? "Deleting..." : "Delete"}
-                        </button>
+                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                      <div className="inline-flex items-center gap-1.5">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span>By you</span>
                       </div>
+                      {course.category_name && (
+                        <div className="inline-flex items-center gap-1.5">
+                          <Layers className="h-4 w-4 text-gray-500" />
+                          <span>{course.category_name}</span>
+                        </div>
+                      )}
                     </div>
+                    <button
+                      onClick={() => navigate(`/courses/${course.id}`)}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium shadow-md hover:shadow-lg transition"
+                    >
+                      Manage course <ArrowRightCircle className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -155,6 +139,7 @@ const MyCourses = () => {
       )}
 
       {/* Enrolled Courses */}
+      
       {enrollments.length === 0 ? (
         <div className="text-center text-gray-600">
           <p className="mb-6">You are not enrolled in any courses yet.</p>
@@ -166,56 +151,49 @@ const MyCourses = () => {
           </button>
         </div>
       ) : (
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {enrollments.map((enrollment) => {
-            const course = enrollment;
-            return (
-              <div
-                key={course.id}
-                onClick={() => navigate(`/course/${course.id}`)}
-                className="bg-white/80 backdrop-blur-md rounded-2xl shadow-md cursor-pointer hover:shadow-xl transition transform hover:-translate-y-1 border border-gray-100 overflow-hidden group"
-              >
-                <img
-                  src={course.image || "https://via.placeholder.com/400x200"}
-                  alt={course.title}
-                  className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition">
-                    {course.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                    {course.description}
-                  </p>
-                  <div className="flex justify-between items-center text-sm text-blue-600 font-medium">
-                    <span>{course.category_name || "Uncategorized"}</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </div>
-                  <div className="mt-4">
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        try {
-                          setWithdrawingId(course.id);
-                          await withdrawFromCourse(course.id);
-                          setEnrollments((prev) => prev.filter((c) => c.id !== course.id));
-                        } catch (err) {
-                          console.error(err);
-                          alert("Failed to withdraw.");
-                        } finally {
-                          setWithdrawingId(null);
-                        }
-                      }}
-                      disabled={withdrawingId === course.id}
-                      className="w-full py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] disabled:opacity-60"
-                    >
-                      {withdrawingId === course.id ? "Withdrawing..." : "Withdraw"}
-                    </button>
+        <div className="flex flex-col gap-5">
+          <div className="flex justify-between">
+            <h2 className="text-2xl font-bold text-gray-900 self-start">
+              Your Enrolled courses
+            </h2>
+            <button
+              onClick={() => navigate("/courses")}
+              className="px-6 py-3 rounded-lg border border-gray-300 hover:border-blue-400 hover:text-blue-600 transition"
+            >
+              Explore Courses
+            </button>
+          </div>
+
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {enrollments.map((enrollment) => {
+              const course = enrollment;
+              return (
+                <div
+                  key={course.id}
+                  onClick={() => navigate(`/courses/${course.id}`)}
+                  className="bg-white/80 backdrop-blur-md rounded-2xl shadow-md cursor-pointer hover:shadow-xl transition transform hover:-translate-y-1 border border-gray-100 overflow-hidden group"
+                >
+                  <img
+                    src={course.image || "https://via.placeholder.com/400x200"}
+                    alt={course.title}
+                    className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="p-5">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition">
+                      {course.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                      {course.description}
+                    </p>
+                    <div className="flex justify-between items-center text-sm text-blue-600 font-medium">
+                      <span>{course.category_name || "Uncategorized"}</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

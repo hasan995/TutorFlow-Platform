@@ -118,13 +118,16 @@ export const getStudentEnrollments = async (studentId) => {
 
 // Instructor: list created courses
 export const getInstructorCourses = async (instructorId) => {
-  const res = await api.get(`courses/instructors/${instructorId}/`);
+  const res = await api.get(`courses/instructor/${instructorId}/courses/`);
   return res.data.courses;
 };
 
 // Update a course
 export const updateCourse = async (id, data) => {
-  const res = await api.put(`courses/${id}/update/`, data);
+  const isFormData = data instanceof FormData;
+  const res = await api.put(`courses/${id}/update/`, data, {
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined,
+  });
   return res.data;
 };
 
