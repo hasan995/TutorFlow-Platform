@@ -19,6 +19,7 @@ const CreateCourse = () => {
     title: "",
     description: "",
     category: "",
+    price: "",
     image: null,
   });
   const [preview, setPreview] = useState(null);
@@ -54,6 +55,7 @@ const CreateCourse = () => {
           ...prev,
           title: data.title || "",
           description: data.description || "",
+          price: data.price || "",
           // category will be set once categories are loaded
         }));
         setPreview(data.image || null);
@@ -94,6 +96,7 @@ const CreateCourse = () => {
           title: form.title,
           description: form.description,
           category: form.category,
+          price: form.price,
         };
         await updateCourse(editId, payload);
         setSuccess(true);
@@ -102,12 +105,13 @@ const CreateCourse = () => {
         formData.append("title", form.title);
         formData.append("description", form.description);
         formData.append("category", form.category);
+        formData.append("price", form.price);
         if (form.image) {
           formData.append("image", form.image);
         }
         await createCourse(formData);
         setSuccess(true);
-        setForm({ title: "", description: "", category: "", image: null });
+        setForm({ title: "", description: "", category: "", price: "", image: null });
         setPreview(null);
       }
     } catch (err) {
@@ -192,6 +196,24 @@ const CreateCourse = () => {
                 ))}
               </select>
             )}
+          </div>
+
+          {/* Price */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Course Price ($)
+            </label>
+            <input
+              type="number"
+              name="price"
+              value={form.price}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+              required
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+              placeholder="Enter course price (e.g., 29.99)"
+            />
           </div>
 
           {/* Image Upload */}

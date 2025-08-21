@@ -16,7 +16,7 @@ const CourseDetailsPage = () => {
   const [deleting, setDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [editedCourse, setEditedCourse] = useState({ title: "", description: "", category: "", image: null });
+  const [editedCourse, setEditedCourse] = useState({ title: "", description: "", category: "", price: "", image: null });
   const [categories, setCategories] = useState([]);
   const [preview, setPreview] = useState(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -98,6 +98,7 @@ const CourseDetailsPage = () => {
       title: course?.title || "",
       description: course?.description || "",
       category: categories.find((c) => c.name === course?.category_name)?.id || "",
+      price: course?.price || "",
       image: null,
     });
     setIsEditing(true);
@@ -125,12 +126,14 @@ const CourseDetailsPage = () => {
         payload.append("title", editedCourse.title);
         payload.append("description", editedCourse.description);
         if (editedCourse.category) payload.append("category", editedCourse.category);
+        payload.append("price", editedCourse.price);
         payload.append("image", editedCourse.image);
       } else {
         payload = {
           title: editedCourse.title,
           description: editedCourse.description,
           category: editedCourse.category,
+          price: editedCourse.price,
         };
       }
       const updated = await updateCourse(course.id, payload);
@@ -306,6 +309,19 @@ const CourseDetailsPage = () => {
                         ))}
                       </select>
                     </div>
+                    {/* Price */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Course Price ($)</label>
+                      <input
+                        type="number"
+                        value={editedCourse.price}
+                        onChange={(e) => setEditedCourse((prev) => ({ ...prev, price: e.target.value }))}
+                        min="0"
+                        step="0.01"
+                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Enter course price"
+                      />
+                    </div>
                     {/* Image Upload */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Course Image</label>
@@ -373,6 +389,14 @@ const CourseDetailsPage = () => {
                         </button>
                       )}
                     </div>
+                    {course.price !== undefined && (
+                      <div className="mt-4">
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Course Price</h3>
+                        <p className="mt-2 text-2xl font-bold text-green-600">
+                          ${Number(course.price).toFixed(2)}
+                        </p>
+                      </div>
+                    )}
                   </>
                 )}
 

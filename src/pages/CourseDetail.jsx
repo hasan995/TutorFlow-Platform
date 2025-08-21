@@ -123,6 +123,12 @@ const CourseDetail = () => {
               <GraduationCap className="h-4 w-4" />
               {course.instructor?.name || "View Instructor"}
             </button>
+
+            {course.price !== undefined && (
+              <span className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full text-lg font-bold">
+                ${Number(course.price).toFixed(2)}
+              </span>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -177,10 +183,17 @@ const CourseDetail = () => {
                   <p className="text-sm text-gray-600 line-clamp-2 mb-3">
                     {rel.description}
                   </p>
-                  <div className="flex justify-between items-center text-sm text-blue-600 font-medium">
+                  <div className="flex justify-between items-center text-sm text-blue-600 font-medium mb-3">
                     <span>{rel.category?.name}</span>
                     <ArrowRight className="h-4 w-4" />
                   </div>
+                  {rel.price !== undefined && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold text-green-600">
+                        ${Number(rel.price).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

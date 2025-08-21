@@ -124,6 +124,13 @@ const MyCourses = () => {
                         </div>
                       )}
                     </div>
+                    {course.price !== undefined && (
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-lg font-bold text-green-600">
+                          ${Number(course.price).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                     <button
                       onClick={() => navigate(`/courses/${course.id}`)}
                       className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium shadow-md hover:shadow-lg transition"
@@ -185,10 +192,17 @@ const MyCourses = () => {
                     <p className="text-sm text-gray-600 line-clamp-2 mb-3">
                       {course.description}
                     </p>
-                    <div className="flex justify-between items-center text-sm text-blue-600 font-medium">
+                    <div className="flex justify-between items-center text-sm text-blue-600 font-medium mb-3">
                       <span>{course.category_name || "Uncategorized"}</span>
                       <ArrowRight className="h-4 w-4" />
                     </div>
+                    {course.price !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-bold text-green-600">
+                          ${Number(course.price).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
