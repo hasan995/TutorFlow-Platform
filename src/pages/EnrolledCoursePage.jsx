@@ -20,6 +20,16 @@ const CourseDetailsPage = () => {
   const [categories, setCategories] = useState([]);
   const [preview, setPreview] = useState(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [showFullDesc, setShowFullDesc] = useState(false);
+
+  const instructorInitials = useMemo(() => {
+    const name = course?.instructor_name || "";
+    const parts = name.trim().split(" ").filter(Boolean);
+    if (parts.length === 0) return "";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }, [course?.instructor_name]);
 
   const currentVideo = useMemo(() => {
     if (!Array.isArray(course?.videos) || course.videos.length === 0) return null;
@@ -134,6 +144,20 @@ const CourseDetailsPage = () => {
     }
   };
 
+  const confirmDeleteCourse = async () => {
+    try {
+      setDeleting(true);
+      await deleteCourse(course.id);
+      setShowDeletePopup(false);
+      navigate("/myCourses");
+    } catch (e) {
+      console.error(e);
+      alert("Failed to delete course.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleCreateExam = async () => {
     const defaultName = course?.title ? `${course.title} Exam` : "Course Exam";
     const name = prompt("Enter exam name:", defaultName);
@@ -216,6 +240,29 @@ const CourseDetailsPage = () => {
       <div className="flex-1 bg-white rounded-2xl shadow-xl p-8 h-[80vh] overflow-y-auto">
         {activeTab === "overview" && (
           <div className="rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-6 shadow-sm">
+            {isOwnerInstructor && !isEditing && (
+              <div className="mb-4 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={beginEdit}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-yellow-500 text-white hover:bg-yellow-600 shadow"
+                  title="Edit course"
+                >
+                  <Pencil className="w-4 h-4" /> Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeletePopup(true)}
+                  disabled={deleting}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-white shadow ${
+                    deleting ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
+                  }`}
+                  title={deleting ? "Deleting..." : "Delete course"}
+                >
+                  <Trash2 className="w-4 h-4" /> Delete
+                </button>
+              </div>
+            )}
             <div className="flex flex-col md:flex-row gap-8">
               <div className="relative">
                 <img
@@ -223,41 +270,6 @@ const CourseDetailsPage = () => {
                   alt={course.title}
                   className="w-full md:w-80 h-56 object-cover rounded-xl shadow-md ring-2 ring-offset-2 ring-blue-100"
                 />
-                {isOwnerInstructor && !isEditing && (
-                  <div className="absolute top-2 right-2 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={beginEdit}
-                      title="Edit course"
-                      className="p-2 rounded-md bg-white/90 text-gray-700 shadow hover:bg-white"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (!window.confirm("Delete this course?")) return;
-                        try {
-                          setDeleting(true);
-                          await deleteCourse(course.id);
-                          navigate("/myCourses");
-                        } catch (e) {
-                          console.error(e);
-                          alert("Failed to delete course.");
-                        } finally {
-                          setDeleting(false);
-                        }
-                      }}
-                      disabled={deleting}
-                      title={deleting ? "Deleting..." : "Delete course"}
-                      className={`p-2 rounded-md text-white shadow ${
-                        deleting ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
-                      }`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
               </div>
               <div className="flex-1">
                 {isEditing ? (
@@ -273,6 +285,12 @@ const CourseDetailsPage = () => {
                       onChange={(e) => setEditedCourse((prev) => ({ ...prev, description: e.target.value }))}
                       rows={4}
                       className="w-full border rounded-lg px-3 py-2 text-gray-700"
+                    />
+                    <input
+                      type="text"
+                      value={course.instructor_name}
+                      readOnly
+                      className="w-full border rounded-lg px-3 py-2 text-gray-500 bg-gray-50"
                     />
                     {/* Category */}
                     <div>
@@ -326,18 +344,35 @@ const CourseDetailsPage = () => {
                   </div>
                 ) : (
                   <>
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      {course.title}
-                    </h2>
-                    <p className="text-gray-600 mt-2">
-                      Instructor:{" "}
-                      <span className="font-semibold">
-                        {course.instructor_name}
-                      </span>
-                    </p>
-                    <p className="mt-4 text-gray-700 leading-relaxed">
-                      {course.description}
-                    </p>
+                    <div className="flex items-start justify-between">
+                      <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-left leading-tight">
+                        {course.title}
+                      </h1>
+                    </div>
+                    <div className="mt-4 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center font-semibold shadow">
+                        {instructorInitials}
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-gray-500">Instructor</p>
+                        <p className="text-sm font-semibold text-gray-800">{course.instructor_name || "Unknown"}</p>
+                      </div>
+                    </div>
+                    <div className="mt-6">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">About this course</h3>
+                      <p className={`mt-2 text-gray-700 leading-relaxed ${showFullDesc ? '' : 'line-clamp-4'}`}>
+                        {course.description}
+                      </p>
+                      {course.description && course.description.length > 220 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowFullDesc((v) => !v)}
+                          className="mt-1 text-sm text-blue-600 hover:underline"
+                        >
+                          {showFullDesc ? 'Show less' : 'Read more'}
+                        </button>
+                      )}
+                    </div>
                   </>
                 )}
 
@@ -596,6 +631,30 @@ const CourseDetailsPage = () => {
                 }`}
               >
                 {withdrawing ? "Withdrawing..." : "Yes, Withdraw"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delete Confirmation Modal */}
+      {showDeletePopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-[90%] max-w-md">
+            <h3 className="text-lg font-semibold text-gray-800">Delete Course</h3>
+            <p className="text-gray-600 mt-2">Are you sure you want to delete <span className="font-semibold">{course.title}</span>? This action cannot be undone.</p>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeletePopup(false)}
+                className="px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteCourse}
+                disabled={deleting}
+                className={`px-4 py-2 rounded-md text-white shadow ${deleting ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>
