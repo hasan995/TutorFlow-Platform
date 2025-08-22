@@ -33,7 +33,7 @@ const Navbar = () => {
   const isLoggedIn = !!localStorage.getItem("accessToken");
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
-  const username = user?.username || null;
+  const displayName = user?.first_name || user?.username || null;
   const role = user?.role || null;
 
   const navLinks = [
@@ -110,7 +110,7 @@ const Navbar = () => {
                       className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
                     >
                       <User className="h-5 w-5" />
-                      <span className="hidden sm:block">{username}</span>
+                      <span className="hidden sm:block">{displayName}</span>
                     </button>
 
                     {isMenuOpen && (

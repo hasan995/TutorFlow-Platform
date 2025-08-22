@@ -38,6 +38,26 @@ export const register = async (data) => {
   return res.data;
 };
 
+// ========== GOOGLE OAUTH2 ENDPOINTS ==========
+
+// Get Google OAuth2 authorization URL
+export const getGoogleAuthUrl = async (redirectUri) => {
+  const res = await api.get("oauth2/google/auth-url/", {
+    params: { redirect_uri: redirectUri }
+  });
+  return res.data;
+};
+
+// Handle Google OAuth2 callback
+export const googleAuthCallback = async (code, redirectUri, role) => {
+  const res = await api.post("oauth2/google/callback/", {
+    code,
+    redirect_uri: redirectUri,
+    role
+  });
+  return res.data;
+};
+
 // Login
 export const login = async (data) => {
   const res = await api.post("auth/login/", data);

@@ -16,6 +16,7 @@ import Sessions from "./pages/LiveSessions";
 import SessionDetail from "./pages/SessionDetail";
 import CreateSession from "./pages/createSession";
 import EnrolledCourseDetais from "./pages/EnrolledCoursePage";
+import GoogleAuthCallback from "./pages/GoogleAuthCallback";
 import "./App.css"; // Assuming you have a global CSS file for styles
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
           </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/callback" element={<GoogleAuthCallback />} />
         </Routes>
       </BrowserRouter>
     </NotificationProvider>
