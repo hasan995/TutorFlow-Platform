@@ -95,11 +95,17 @@ const CourseDetail = () => {
     <div className="max-w-7xl mx-auto px-4 py-12 mt-16">
       {/* Course Hero */}
       <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden mb-12 border border-gray-100">
-        <img
-          src={course.image || "https://via.placeholder.com/1200x400"}
-          alt={course.title}
-          className="w-full h-72 object-cover"
-        />
+        {course.image ? (
+          <img
+            src={course.image}
+            alt={course.title}
+            className="w-full h-72 object-cover"
+          />
+        ) : (
+          <div className="w-full h-72 flex items-center justify-center bg-indigo-50">
+            <BookOpen className="h-20 w-20 text-indigo-700" />
+          </div>
+        )}
         <div className="p-8">
           <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
             {course.title}
@@ -171,11 +177,17 @@ const CourseDetail = () => {
                 onClick={() => navigate(`/courses/${rel.id}`)}
                 className="bg-white/80 backdrop-blur-md rounded-2xl shadow-md cursor-pointer hover:shadow-xl transition transform hover:-translate-y-1 border border-gray-100 overflow-hidden group"
               >
-                <img
-                  src={rel.image_url || "https://via.placeholder.com/400x200"}
-                  alt={rel.title}
-                  className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                {rel.image_url ? (
+                  <img
+                    src={rel.image_url}
+                    alt={rel.title}
+                    className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-44 flex items-center justify-center bg-indigo-50">
+                    <BookOpen className="h-12 w-12 text-indigo-700" />
+                  </div>
+                )}
                 <div className="p-5">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition">
                     {rel.title}

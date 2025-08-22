@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getCourses, getCategories, enrollInCourse } from "../api/api";
-import { Search } from "lucide-react";
+import { Search, BookOpen } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const CoursesPage = () => {
@@ -189,11 +189,17 @@ const CoursesPage = () => {
                 key={course.id}
                 className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition"
               >
-                <img
-                  src={course.image || "https://via.placeholder.com/640x360?text=Course"}
-                  alt={course.title}
-                  className="w-full h-40 object-cover"
-                />
+                {course.image ? (
+                  <img
+                    src={course.image}
+                    alt={course.title}
+                    className="w-full h-40 object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-40 flex items-center justify-center bg-indigo-50">
+                    <BookOpen className="h-12 w-12 text-indigo-700" />
+                  </div>
+                )}
                 <div className="p-6">
                   <h3 className="text-xl font-bold mb-2">{course.title}</h3>
                   <p className="text-gray-600 text-sm line-clamp-3 mb-4">

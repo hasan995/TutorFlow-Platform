@@ -30,6 +30,42 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// 🔁 Global response interceptor to handle expired/invalid sessions
+let isHandlingUnauthorized = false;
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    if (status === 401 && !isHandlingUnauthorized) {
+      isHandlingUnauthorized = true;
+      try {
+        // Avoid triggering on the login or auth callback routes
+        const currentPath = window?.location?.pathname || "";
+        const isAuthRoute = ["/login", "/auth/callback", "/register"].includes(
+          currentPath
+        );
+
+        // Clear any stored credentials
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+
+        if (!isAuthRoute) {
+          // Notify the user and redirect to login
+          window.alert("Your session has expired. Please log in again.");
+          window.location.href = "/login";
+        }
+      } finally {
+        // Reset the flag after a short delay to prevent rapid duplicate alerts
+        setTimeout(() => {
+          isHandlingUnauthorized = false;
+        }, 1000);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ========== AUTH ENDPOINTS ==========
 
 // Register
@@ -43,7 +79,7 @@ export const register = async (data) => {
 // Get Google OAuth2 authorization URL
 export const getGoogleAuthUrl = async (redirectUri) => {
   const res = await api.get("oauth2/google/auth-url/", {
-    params: { redirect_uri: redirectUri }
+    params: { redirect_uri: redirectUri },
   });
   return res.data;
 };
@@ -53,7 +89,7 @@ export const googleAuthCallback = async (code, redirectUri, role) => {
   const res = await api.post("oauth2/google/callback/", {
     code,
     redirect_uri: redirectUri,
-    role
+    role,
   });
   return res.data;
 };

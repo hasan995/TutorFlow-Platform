@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, Users, Star } from "lucide-react";
+import { Clock, Users, Star, BookOpen } from "lucide-react";
 import { getCourses, enrollInCourse } from "../api/api"; // Adjust the import based on your API utility
 
 const ExploreCourses = () => {
@@ -44,11 +44,17 @@ const ExploreCourses = () => {
               className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden cursor-pointer"
             >
               <div className="relative h-48 overflow-hidden">
-                <img
-                  src={course.image}
-                  alt={course.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                />
+                {course.image ? (
+                  <img
+                    src={course.image}
+                    alt={course.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-indigo-50">
+                    <BookOpen className="h-16 w-16 text-indigo-700" />
+                  </div>
+                )}
                 <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
                   <span className="text-sm font-medium text-gray-900">
                     {course.category_name}
