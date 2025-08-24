@@ -247,4 +247,48 @@ export const getJitsiToken = async (roomName) => {
   return res.data;
 };
 
+// ========== REVIEWS ENDPOINTS ==========
+export const getCourseReviews = async (courseId, params = {}) => {
+  const res = await api.get(`courses/${courseId}/reviews/list/`, { params });
+  return res.data;
+};
+
+export const createReview = async (courseId, data) => {
+  const res = await api.post(`courses/${courseId}/reviews/`, data);
+  return res.data;
+};
+
+export const editReview = async (reviewId, data) => {
+  const res = await api.put(`courses/reviews/${reviewId}/`, data);
+  return res.data;
+};
+
+export const deleteReview = async (reviewId) => {
+  const res = await api.delete(`courses/reviews/${reviewId}/delete/`);
+  return res.data;
+};
+
+// ========== NOTES ENDPOINTS ==========
+export const getCourseNotes = async (courseId, params = {}) => {
+  console.log("params", params);
+  const res = await api.get(`courses/${courseId}/notes/list/`, { params });
+  console.log(res.data);
+  return res.data;
+};
+
+export const createNote = async (courseId, data) => {
+  const res = await api.post(`courses/${courseId}/notes/`, data);
+  return res.data;
+};
+
+export const editNote = async (noteId, data) => {
+  const res = await api.put(`courses/notes/${noteId}/`, data);
+  return res.data;
+};
+
+export const deleteNote = async (noteId) => {
+  const res = await api.delete(`courses/notes/${noteId}/delete/`);
+  return res.data;
+};
+
 export default api;

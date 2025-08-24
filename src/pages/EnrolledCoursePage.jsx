@@ -1,7 +1,33 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getCourse, withdrawFromCourse, createCourseVideo, createExam, deleteCourse, updateCourse, getCategories } from "../api/api";
-import { BookOpen, Star, FileText, Video, Pencil, Trash2, Save, X, Layers, User, Users, Image as ImageIcon, SkipBack, SkipForward, PlayCircle } from "lucide-react";
+import Reviews from "../components/Reviews";
+import Notes from "../components/Notes";
+import {
+  getCourse,
+  withdrawFromCourse,
+  createCourseVideo,
+  createExam,
+  deleteCourse,
+  updateCourse,
+  getCategories,
+} from "../api/api";
+import {
+  BookOpen,
+  Star,
+  FileText,
+  Video,
+  Pencil,
+  Trash2,
+  Save,
+  X,
+  Layers,
+  User,
+  Users,
+  Image as ImageIcon,
+  SkipBack,
+  SkipForward,
+  PlayCircle,
+} from "lucide-react";
 
 const CourseDetailsPage = () => {
   const { id } = useParams();
@@ -12,11 +38,22 @@ const CourseDetailsPage = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const [addingVideo, setAddingVideo] = useState(false);
-  const [videoForm, setVideoForm] = useState({ title: "", url: "", description: "", order: 0 });
+  const [videoForm, setVideoForm] = useState({
+    title: "",
+    url: "",
+    description: "",
+    order: 0,
+  });
   const [deleting, setDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [editedCourse, setEditedCourse] = useState({ title: "", description: "", category: "", price: "", image: null });
+  const [editedCourse, setEditedCourse] = useState({
+    title: "",
+    description: "",
+    category: "",
+    price: "",
+    image: null,
+  });
   const [categories, setCategories] = useState([]);
   const [preview, setPreview] = useState(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -32,15 +69,21 @@ const CourseDetailsPage = () => {
   }, [course?.instructor_name]);
 
   const currentVideo = useMemo(() => {
-    if (!Array.isArray(course?.videos) || course.videos.length === 0) return null;
-    const index = Math.min(Math.max(currentVideoIndex, 0), course.videos.length - 1);
+    if (!Array.isArray(course?.videos) || course.videos.length === 0)
+      return null;
+    const index = Math.min(
+      Math.max(currentVideoIndex, 0),
+      course.videos.length - 1
+    );
     return course.videos[index];
   }, [course, currentVideoIndex]);
 
   const getEmbedUrl = (url) => {
     if (!url) return null;
     try {
-      const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+      const ytMatch = url.match(
+        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/
+      );
       if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
       const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
       if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
@@ -77,7 +120,8 @@ const CourseDetailsPage = () => {
     })();
   }, []);
 
-  const isOwnerInstructor = user?.role === "instructor" && course?.instructor === user?.id;
+  const isOwnerInstructor =
+    user?.role === "instructor" && course?.instructor === user?.id;
 
   const confirmWithdraw = async () => {
     try {
@@ -97,7 +141,8 @@ const CourseDetailsPage = () => {
     setEditedCourse({
       title: course?.title || "",
       description: course?.description || "",
-      category: categories.find((c) => c.name === course?.category_name)?.id || "",
+      category:
+        categories.find((c) => c.name === course?.category_name)?.id || "",
       price: course?.price || "",
       image: null,
     });
@@ -125,7 +170,8 @@ const CourseDetailsPage = () => {
         payload = new FormData();
         payload.append("title", editedCourse.title);
         payload.append("description", editedCourse.description);
-        if (editedCourse.category) payload.append("category", editedCourse.category);
+        if (editedCourse.category)
+          payload.append("category", editedCourse.category);
         payload.append("price", editedCourse.price);
         payload.append("image", editedCourse.image);
       } else {
@@ -184,12 +230,17 @@ const CourseDetailsPage = () => {
         order: parseInt(videoForm.order || 0, 10),
       };
       const created = await createCourseVideo(id, payload);
-      setCourse((prev) => ({ ...prev, videos: [...(prev.videos || []), created] }));
+      setCourse((prev) => ({
+        ...prev,
+        videos: [...(prev.videos || []), created],
+      }));
       setAddingVideo(false);
       setVideoForm({ title: "", url: "", description: "", order: 0 });
     } catch (e) {
       console.error(e);
-      const msg = e?.response?.data ? JSON.stringify(e.response.data) : "Failed to add video.";
+      const msg = e?.response?.data
+        ? JSON.stringify(e.response.data)
+        : "Failed to add video.";
       alert(msg);
     }
   };
@@ -258,7 +309,9 @@ const CourseDetailsPage = () => {
                   onClick={() => setShowDeletePopup(true)}
                   disabled={deleting}
                   className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-white shadow ${
-                    deleting ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
+                    deleting
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700"
                   }`}
                   title={deleting ? "Deleting..." : "Delete course"}
                 >
@@ -280,12 +333,22 @@ const CourseDetailsPage = () => {
                     <input
                       type="text"
                       value={editedCourse.title}
-                      onChange={(e) => setEditedCourse((prev) => ({ ...prev, title: e.target.value }))}
+                      onChange={(e) =>
+                        setEditedCourse((prev) => ({
+                          ...prev,
+                          title: e.target.value,
+                        }))
+                      }
                       className="w-full border rounded-lg px-3 py-2 text-xl font-semibold"
                     />
                     <textarea
                       value={editedCourse.description}
-                      onChange={(e) => setEditedCourse((prev) => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) =>
+                        setEditedCourse((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       rows={4}
                       className="w-full border rounded-lg px-3 py-2 text-gray-700"
                     />
@@ -297,25 +360,41 @@ const CourseDetailsPage = () => {
                     />
                     {/* Category */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Category
+                      </label>
                       <select
                         value={editedCourse.category}
-                        onChange={(e) => setEditedCourse((prev) => ({ ...prev, category: e.target.value }))}
+                        onChange={(e) =>
+                          setEditedCourse((prev) => ({
+                            ...prev,
+                            category: e.target.value,
+                          }))
+                        }
                         className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       >
                         <option value="">Select a category</option>
                         {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
                         ))}
                       </select>
                     </div>
                     {/* Price */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Course Price ($)</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Course Price ($)
+                      </label>
                       <input
                         type="number"
                         value={editedCourse.price}
-                        onChange={(e) => setEditedCourse((prev) => ({ ...prev, price: e.target.value }))}
+                        onChange={(e) =>
+                          setEditedCourse((prev) => ({
+                            ...prev,
+                            price: e.target.value,
+                          }))
+                        }
                         min="0"
                         step="0.01"
                         className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500"
@@ -324,16 +403,27 @@ const CourseDetailsPage = () => {
                     </div>
                     {/* Image Upload */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Course Image</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Course Image
+                      </label>
                       <div className="flex gap-4 items-center">
                         <div className="w-32 h-20 rounded-lg border overflow-hidden bg-gray-50 flex items-center justify-center">
                           {preview ? (
-                            <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                            <img
+                              src={preview}
+                              alt="Preview"
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
                             <ImageIcon className="w-6 h-6 text-gray-400" />
                           )}
                         </div>
-                        <input type="file" accept="image/*" onChange={handleImageChange} className="text-sm" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="text-sm"
+                        />
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -343,7 +433,9 @@ const CourseDetailsPage = () => {
                         disabled={updating}
                         title={updating ? "Saving..." : "Save"}
                         className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-white ${
-                          updating ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+                          updating
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-green-600 hover:bg-green-700"
                         }`}
                       >
                         <Save className="w-4 h-4" /> Save
@@ -370,28 +462,41 @@ const CourseDetailsPage = () => {
                         {instructorInitials}
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-wider text-gray-500">Instructor</p>
-                        <p className="text-sm font-semibold text-gray-800">{course.instructor_name || "Unknown"}</p>
+                        <p className="text-xs uppercase tracking-wider text-gray-500">
+                          Instructor
+                        </p>
+                        <p className="text-sm font-semibold text-gray-800">
+                          {course.instructor_name || "Unknown"}
+                        </p>
                       </div>
                     </div>
                     <div className="mt-6">
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">About this course</h3>
-                      <p className={`mt-2 text-gray-700 leading-relaxed ${showFullDesc ? '' : 'line-clamp-4'}`}>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        About this course
+                      </h3>
+                      <p
+                        className={`mt-2 text-gray-700 leading-relaxed ${
+                          showFullDesc ? "" : "line-clamp-4"
+                        }`}
+                      >
                         {course.description}
                       </p>
-                      {course.description && course.description.length > 220 && (
-                        <button
-                          type="button"
-                          onClick={() => setShowFullDesc((v) => !v)}
-                          className="mt-1 text-sm text-blue-600 hover:underline"
-                        >
-                          {showFullDesc ? 'Show less' : 'Read more'}
-                        </button>
-                      )}
+                      {course.description &&
+                        course.description.length > 220 && (
+                          <button
+                            type="button"
+                            onClick={() => setShowFullDesc((v) => !v)}
+                            className="mt-1 text-sm text-blue-600 hover:underline"
+                          >
+                            {showFullDesc ? "Show less" : "Read more"}
+                          </button>
+                        )}
                     </div>
                     {course.price !== undefined && (
                       <div className="mt-4">
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Course Price</h3>
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          Course Price
+                        </h3>
                         <p className="mt-2 text-2xl font-bold text-green-600">
                           ${Number(course.price).toFixed(2)}
                         </p>
@@ -408,7 +513,11 @@ const CourseDetailsPage = () => {
                       </span>
                       <div>
                         <p className="text-xs text-gray-500">Lectures</p>
-                        <p className="text-lg font-semibold">{Array.isArray(course.videos) ? course.videos.length : 0}</p>
+                        <p className="text-lg font-semibold">
+                          {Array.isArray(course.videos)
+                            ? course.videos.length
+                            : 0}
+                        </p>
                       </div>
                     </div>
                     <div className="bg-white rounded-xl border p-4 shadow-sm flex items-center gap-3">
@@ -417,7 +526,9 @@ const CourseDetailsPage = () => {
                       </span>
                       <div>
                         <p className="text-xs text-gray-500">Instructor</p>
-                        <p className="text-sm font-semibold">{course.instructor_name}</p>
+                        <p className="text-sm font-semibold">
+                          {course.instructor_name}
+                        </p>
                       </div>
                     </div>
                     <div className="bg-white rounded-xl border p-4 shadow-sm flex items-center gap-3">
@@ -426,7 +537,9 @@ const CourseDetailsPage = () => {
                       </span>
                       <div>
                         <p className="text-xs text-gray-500">Category</p>
-                        <p className="text-sm font-semibold">{course.category_name || "—"}</p>
+                        <p className="text-sm font-semibold">
+                          {course.category_name || "—"}
+                        </p>
                       </div>
                     </div>
                     <div className="bg-white rounded-xl border p-4 shadow-sm flex items-center gap-3">
@@ -435,7 +548,9 @@ const CourseDetailsPage = () => {
                       </span>
                       <div>
                         <p className="text-xs text-gray-500">Enrolled</p>
-                        <p className="text-sm font-semibold">{course.enrollments_count ?? 0}</p>
+                        <p className="text-sm font-semibold">
+                          {course.enrollments_count ?? 0}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -456,16 +571,8 @@ const CourseDetailsPage = () => {
           </div>
         )}
 
-        {activeTab === "reviews" && (
-          <div className="text-gray-500 min-h-[40vh] flex items-center justify-center">
-            Reviews section coming soon...
-          </div>
-        )}
-        {activeTab === "notes" && (
-          <div className="text-gray-500 min-h-[40vh] flex items-center justify-center">
-            Notes section coming soon...
-          </div>
-        )}
+        {activeTab === "reviews" && <Reviews courseId={course.id} />}
+        {activeTab === "notes" && <Notes courseId={course.id} />}
         {activeTab === "lectures" && (
           <div>
             {isOwnerInstructor && (
@@ -480,54 +587,79 @@ const CourseDetailsPage = () => {
             )}
 
             {isOwnerInstructor && addingVideo && (
-              <form onSubmit={handleAddVideo} className="mb-8 grid gap-4 max-w-xl bg-white border rounded-xl p-4 shadow-sm">
+              <form
+                onSubmit={handleAddVideo}
+                className="mb-8 grid gap-4 max-w-xl bg-white border rounded-xl p-4 shadow-sm"
+              >
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Video title</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Video title
+                  </label>
                   <input
                     type="text"
                     placeholder="Intro to React"
                     value={videoForm.title}
-                    onChange={(e) => setVideoForm({ ...videoForm, title: e.target.value })}
+                    onChange={(e) =>
+                      setVideoForm({ ...videoForm, title: e.target.value })
+                    }
                     className="w-full border rounded-lg px-3 py-2"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Video URL</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Video URL
+                  </label>
                   <input
                     type="url"
                     placeholder="https://www.youtube.com/watch?v=..."
                     value={videoForm.url}
-                    onChange={(e) => setVideoForm({ ...videoForm, url: e.target.value })}
+                    onChange={(e) =>
+                      setVideoForm({ ...videoForm, url: e.target.value })
+                    }
                     className="w-full border rounded-lg px-3 py-2"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description (optional)
+                  </label>
                   <textarea
                     placeholder="What will students learn in this video?"
                     value={videoForm.description}
-                    onChange={(e) => setVideoForm({ ...videoForm, description: e.target.value })}
+                    onChange={(e) =>
+                      setVideoForm({
+                        ...videoForm,
+                        description: e.target.value,
+                      })
+                    }
                     className="w-full border rounded-lg px-3 py-2"
                     rows={3}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Order (optional)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Order (optional)
+                    </label>
                     <input
                       type="number"
                       placeholder="0"
                       value={videoForm.order}
-                      onChange={(e) => setVideoForm({ ...videoForm, order: e.target.value })}
+                      onChange={(e) =>
+                        setVideoForm({ ...videoForm, order: e.target.value })
+                      }
                       className="w-full border rounded-lg px-3 py-2"
                       min={0}
                     />
                   </div>
                 </div>
                 <div>
-                  <button type="submit" className="px-6 py-2 rounded-lg bg-green-600 text-white font-semibold shadow-md hover:bg-green-700 transition">
+                  <button
+                    type="submit"
+                    className="px-6 py-2 rounded-lg bg-green-600 text-white font-semibold shadow-md hover:bg-green-700 transition"
+                  >
                     Save Video
                   </button>
                 </div>
@@ -540,7 +672,12 @@ const CourseDetailsPage = () => {
                 <div className="lg:col-span-2 bg-white rounded-xl border shadow-sm p-4">
                   <div className="aspect-video w-full overflow-hidden rounded-lg bg-black/5">
                     {currentVideo?.file ? (
-                      <video key={currentVideo.file} controls className="w-full h-full" src={currentVideo.file} />
+                      <video
+                        key={currentVideo.file}
+                        controls
+                        className="w-full h-full"
+                        src={currentVideo.file}
+                      />
                     ) : currentVideo?.url && getEmbedUrl(currentVideo.url) ? (
                       <iframe
                         key={currentVideo.url}
@@ -552,15 +689,24 @@ const CourseDetailsPage = () => {
                         allowFullScreen
                       />
                     ) : currentVideo?.url ? (
-                      <video key={currentVideo.url} controls className="w-full h-full" src={currentVideo.url} />
+                      <video
+                        key={currentVideo.url}
+                        controls
+                        className="w-full h-full"
+                        src={currentVideo.url}
+                      />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-500">No video source</div>
+                      <div className="w-full h-full flex items-center justify-center text-gray-500">
+                        No video source
+                      </div>
                     )}
                   </div>
                   <div className="mt-3 flex items-center justify-between">
                     <button
                       className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
-                      onClick={() => setCurrentVideoIndex((i) => Math.max(i - 1, 0))}
+                      onClick={() =>
+                        setCurrentVideoIndex((i) => Math.max(i - 1, 0))
+                      }
                       disabled={currentVideoIndex === 0}
                     >
                       <SkipBack className="w-4 h-4" /> Previous
@@ -570,7 +716,11 @@ const CourseDetailsPage = () => {
                     </div>
                     <button
                       className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
-                      onClick={() => setCurrentVideoIndex((i) => Math.min(i + 1, course.videos.length - 1))}
+                      onClick={() =>
+                        setCurrentVideoIndex((i) =>
+                          Math.min(i + 1, course.videos.length - 1)
+                        )
+                      }
                       disabled={currentVideoIndex >= course.videos.length - 1}
                     >
                       Next <SkipForward className="w-4 h-4" />
@@ -582,20 +732,23 @@ const CourseDetailsPage = () => {
                       {currentVideo?.title || "Untitled video"}
                     </h3>
                     {currentVideo?.description && (
-                      <p className="mt-1 text-gray-600">{currentVideo.description}</p>
+                      <p className="mt-1 text-gray-600">
+                        {currentVideo.description}
+                      </p>
                     )}
                     <div className="mt-2 text-sm text-gray-500 flex gap-4 flex-wrap">
                       {typeof currentVideo?.order !== "undefined" && (
                         <span>Order: #{currentVideo.order}</span>
                       )}
-                      
                     </div>
                   </div>
                 </div>
 
                 {/* Playlist */}
                 <aside className="bg-white rounded-xl border shadow-sm p-3 max-h-[60vh] overflow-y-auto">
-                  <div className="text-sm font-semibold text-gray-700 mb-2">Playlist</div>
+                  <div className="text-sm font-semibold text-gray-700 mb-2">
+                    Playlist
+                  </div>
                   <div className="space-y-2">
                     {course.videos.map((v, idx) => {
                       const isActive = idx === currentVideoIndex;
@@ -603,15 +756,29 @@ const CourseDetailsPage = () => {
                         <button
                           key={v.id}
                           onClick={() => setCurrentVideoIndex(idx)}
-                          className={`w-full text-left p-2 rounded-lg border flex items-center gap-3 ${isActive ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'}`}
+                          className={`w-full text-left p-2 rounded-lg border flex items-center gap-3 ${
+                            isActive
+                              ? "bg-blue-50 border-blue-200"
+                              : "hover:bg-gray-50"
+                          }`}
                         >
-                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${isActive ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                          <span
+                            className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${
+                              isActive
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
                             <PlayCircle className="w-4 h-4" />
                           </span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{v.title}</p>
-                            {typeof v.order !== 'undefined' && (
-                              <p className="text-xs text-gray-500">#{v.order}</p>
+                            <p className="text-sm font-medium truncate">
+                              {v.title}
+                            </p>
+                            {typeof v.order !== "undefined" && (
+                              <p className="text-xs text-gray-500">
+                                #{v.order}
+                              </p>
                             )}
                           </div>
                         </button>
@@ -664,8 +831,14 @@ const CourseDetailsPage = () => {
       {showDeletePopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="bg-white rounded-2xl shadow-xl p-6 w-[90%] max-w-md">
-            <h3 className="text-lg font-semibold text-gray-800">Delete Course</h3>
-            <p className="text-gray-600 mt-2">Are you sure you want to delete <span className="font-semibold">{course.title}</span>? This action cannot be undone.</p>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Delete Course
+            </h3>
+            <p className="text-gray-600 mt-2">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">{course.title}</span>? This action
+              cannot be undone.
+            </p>
             <div className="mt-5 flex justify-end gap-3">
               <button
                 onClick={() => setShowDeletePopup(false)}
@@ -676,9 +849,13 @@ const CourseDetailsPage = () => {
               <button
                 onClick={confirmDeleteCourse}
                 disabled={deleting}
-                className={`px-4 py-2 rounded-md text-white shadow ${deleting ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
+                className={`px-4 py-2 rounded-md text-white shadow ${
+                  deleting
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-red-600 hover:bg-red-700"
+                }`}
               >
-                {deleting ? 'Deleting...' : 'Delete'}
+                {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
