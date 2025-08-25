@@ -12,8 +12,10 @@ const CoursesPage = () => {
     categoryIdFromParams ? [parseInt(categoryIdFromParams)] : []
   );
   const [search, setSearch] = useState("");
-  const [price, setPrice] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
   const [instructor, setInstructor] = useState("");
+  const [topSellers, setTopSellers] = useState(false);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -43,8 +45,10 @@ const CoursesPage = () => {
         if (selectedCategories.length > 0) {
           params.category = selectedCategories;
         }
-        if (price !== "") params.price = price;
+        if (priceMin !== "") params.price_min = priceMin;
+        if (priceMax !== "") params.price_max = priceMax;
         if (instructor.trim() !== "") params.instructor = instructor.trim();
+        if (topSellers) params.top_sellers = 1;
 
         const data = await getCourses(params);
         setCourses(data.results);
@@ -60,7 +64,7 @@ const CoursesPage = () => {
       }
     };
     fetchCourses();
-  }, [search, selectedCategories, price, instructor, page]);
+  }, [search, selectedCategories, priceMin, priceMax, instructor, topSellers, page]);
 
   const toggleCategory = (id) => {
     setPage(1);
@@ -88,10 +92,10 @@ const CoursesPage = () => {
     <div className="flex max-w-7xl mx-auto px-4 py-12 gap-8 mt-11">
       {/* Sidebar Filters */}
       <aside className="w-64 bg-white p-6 rounded-2xl shadow-lg h-fit">
-        <h3 className="font-bold text-lg mb-4">Filters</h3>
+        <h3 className="font-bold text-lg mb-4 text-left text-indigo-700">Filters</h3>
         <div className="space-y-5">
           <div>
-            <h4 className="font-semibold text-sm text-gray-700 mb-2">Category</h4>
+            <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">Category</h4>
             <div className="space-y-3 max-h-64 overflow-auto pr-2">
               {categories.map((cat) => (
                 <label
@@ -113,22 +117,52 @@ const CoursesPage = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold text-sm text-gray-700 mb-2">Price</h4>
-            <input
-              type="number"
-              min="0"
-              placeholder="Enter price"
-              value={price}
-              onChange={(e) => {
-                setPrice(e.target.value);
-                setPage(1);
-              }}
-              className="w-full px-3 py-2 border rounded-lg"
-            />
+            <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">Price range</h4>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="0"
+                placeholder="Min"
+                value={priceMin}
+                onChange={(e) => {
+                  setPriceMin(e.target.value);
+                  setPage(1);
+                }}
+                className="w-1/2 px-3 py-2 border rounded-lg"
+              />
+              <span className="text-gray-500">-</span>
+              <input
+                type="number"
+                min="0"
+                placeholder="Max"
+                value={priceMax}
+                onChange={(e) => {
+                  setPriceMax(e.target.value);
+                  setPage(1);
+                }}
+                className="w-1/2 px-3 py-2 border rounded-lg"
+              />
+            </div>
           </div>
 
           <div>
-            <h4 className="font-semibold text-sm text-gray-700 mb-2">Instructor</h4>
+            <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">Top_Sellers</h4>
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={topSellers}
+                onChange={(e) => {
+                  setTopSellers(e.target.checked);
+                  setPage(1);
+                }}
+                className="rounded"
+              />
+              <span>Most Enrolled</span>
+            </label>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">Instructor</h4>
             <input
               type="text"
               placeholder="Instructor Name"
