@@ -57,20 +57,22 @@ const CourseDetail = () => {
     fetchData();
   }, [id]);
 
-  const handleEnrollment = async () => {
+  const handleEnroll = async () => {
     if (!user) {
-      alert("You must be logged in to enroll!");
+      console.log("User not logged in, redirecting to login");
       navigate("/login");
       return;
     }
 
-    setEnrolling(true);
     try {
+      setEnrolling(true);
       await enrollInCourse(id);
-      navigate("/courses/" + id);
+      setIsEnrolled(true);
+      // You can add a success toast notification here
+      console.log("Successfully enrolled in course");
     } catch (error) {
-      console.error("Enrollment action failed", error);
-      alert("❌ Something went wrong, please try again.");
+      console.error("❌ Something went wrong, please try again.", error);
+      // You can add an error toast notification here
     } finally {
       setEnrolling(false);
     }
@@ -141,7 +143,7 @@ const CourseDetail = () => {
           <div className="flex flex-wrap items-center gap-4">
             {/* Enroll/Withdraw button */}
             <button
-              onClick={handleEnrollment}
+              onClick={handleEnroll}
               // disabled={enrolling}
               className={`px-8 py-3 rounded-xl font-semibold text-white shadow-md transition-all duration-300 transform ${
                 enrolling
