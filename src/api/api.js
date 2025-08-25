@@ -152,6 +152,26 @@ export const getCourse = async (id) => {
   return res.data;
 };
 
+// ========== PAYMENT ENDPOINTS ==========
+
+// Initiate payment for a course
+export const initiatePayment = async (courseId) => {
+  const res = await api.post(`courses/${courseId}/payment/initiate/`);
+  return res.data;
+};
+
+// Complete payment
+export const completePayment = async (paymentId) => {
+  const res = await api.post(`courses/payment/${paymentId}/complete/`);
+  return res.data;
+};
+
+// Get payment status
+export const getPaymentStatus = async (paymentId) => {
+  const res = await api.get(`courses/payment/${paymentId}/status/`);
+  return res.data;
+};
+
 // ========== ENROLLMENTS ENDPOINTS ==========
 
 // Enroll in a course

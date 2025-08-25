@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getCourses, getCategories, enrollInCourse } from "../api/api";
-import { Search, BookOpen } from "lucide-react";
+import { Search, BookOpen, ShoppingCart, ArrowRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const CoursesPage = () => {
@@ -75,7 +75,7 @@ const CoursesPage = () => {
 
   const handleEnroll = async (id) => {
     if (!isLoggedIn) {
-      alert("Please log in to enroll.");
+      console.log("User not logged in, redirecting to login");
       navigate("/login");
       return;
     }
@@ -84,8 +84,48 @@ const CoursesPage = () => {
       navigate(`/courses/${id}`);
     } catch (err) {
       console.error("Failed to enroll", err);
-      alert("Failed to enroll.");
+      // You can add a toast notification here instead of alert
+      // For now, just log the error
     }
+  };
+
+  const handleBuyNow = async (courseId) => {
+    if (!isLoggedIn) {
+      console.log("User not logged in, redirecting to login");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("accessToken");
+      
+      const response = await fetch(`http://localhost:8000/api/courses/${courseId}/payment/initiate/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Payment initiated successfully:", data);
+        navigate(data.redirect_url);
+      } else {
+        const errorData = await response.json();
+        console.error("Payment initiation failed:", errorData.error || "Unknown error");
+        // You can add a toast notification here instead of alert
+        // For now, just log the error
+      }
+    } catch (error) {
+      console.error("Error initiating payment:", error);
+      // You can add a toast notification here instead of alert
+      // For now, just log the error
+    }
+  };
+
+  const handleShowDetails = (courseId) => {
+    navigate(`/course/${courseId}`);
   };
 
   return (
@@ -105,12 +145,10 @@ const CoursesPage = () => {
                   <input
                     type="checkbox"
                     checked={selectedCategories.includes(cat.id)}
-                    onChange={() => {
-                      toggleCategory(cat.id);
-                    }}
-                    className="rounded"
+                    onChange={() => toggleCategory(cat.id)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span>{cat.name}</span>
+                  <span className="text-sm text-gray-700">{cat.name}</span>
                 </label>
               ))}
             </div>
@@ -143,6 +181,21 @@ const CoursesPage = () => {
                 className="w-1/2 px-3 py-2 border rounded-lg"
               />
             </div>
+            <h4 className="font-semibold text-sm text-gray-700 mb-2">Price Range</h4>
+            <select
+              value={price}
+              onChange={(e) => {
+                setPrice(e.target.value);
+                setPage(1);
+              }}
+              className="w-full p-2 border rounded-lg text-sm"
+            >
+              <option value="">All Prices</option>
+              <option value="0-50">$0 - $50</option>
+              <option value="50-100">$50 - $100</option>
+              <option value="100-200">$100 - $200</option>
+              <option value="200+">$200+</option>
+            </select>
           </div>
 
           <div>
@@ -165,13 +218,13 @@ const CoursesPage = () => {
             <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">Instructor</h4>
             <input
               type="text"
-              placeholder="Instructor Name"
+              placeholder="Search instructor..."
               value={instructor}
               onChange={(e) => {
                 setInstructor(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full p-2 border rounded-lg text-sm"
             />
           </div>
         </div>
@@ -179,8 +232,8 @@ const CoursesPage = () => {
 
       {/* Main Content */}
       <main className="flex-1">
-        {/* Search */}
-        <div className="flex items-center mb-6">
+        {/* Search Bar */}
+        <div className="mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -221,35 +274,75 @@ const CoursesPage = () => {
             {courses.map((course) => (
               <div
                 key={course.id}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition"
+                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
               >
-                {course.image ? (
-                  <img
-                    src={course.image}
-                    alt={course.title}
-                    className="w-full h-40 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-40 flex items-center justify-center bg-indigo-50">
-                    <BookOpen className="h-12 w-12 text-indigo-700" />
-                  </div>
-                )}
+                {/* Course Image */}
+                <div className="relative">
+                  {course.image ? (
+                    <img
+                      src={course.image}
+                      alt={course.title}
+                      className="w-full h-40 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-40 flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+                      <BookOpen className="h-12 w-12 text-blue-600" />
+                    </div>
+                  )}
+                  
+                  {/* Category Badge */}
+                  {course.category_name && (
+                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-gray-700">
+                      {course.category_name}
+                    </div>
+                  )}
+                </div>
+
+                {/* Course Content */}
                 <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2">{course.title}</h3>
-                  <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                  {/* Course Title */}
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                    {course.title}
+                  </h3>
+                  
+                  {/* Instructor */}
+                  <p className="text-gray-600 text-sm mb-4">
                     By {course.instructor_name || "Unknown Instructor"}
                   </p>
-                  <p className="text-xs text-gray-500 mb-4">
-                    {course.category_name} {course.price !== undefined && (
-                      <span className="ml-2 font-semibold text-gray-700">${Number(course.price).toFixed(2)}</span>
-                    )}
+                  
+                  {/* Description */}
+                  <p className="text-gray-600 text-sm line-clamp-2 mb-4">
+                    {course.description || "Learn from the best instructors in this comprehensive course."}
                   </p>
+
+                  {/* Pricing Section */}
+                  <div className="mb-4">
+                    {course.original_price && course.original_price > course.price ? (
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl font-bold text-gray-900">
+                          ${Number(course.price).toFixed(2)}
+                        </span>
+                        <span className="text-lg text-gray-500 line-through">
+                          ${Number(course.original_price).toFixed(2)}
+                        </span>
+                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                          -{Math.round(((course.original_price - course.price) / course.original_price) * 100)}%
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-2xl font-bold text-gray-900 mb-2">
+                        ${Number(course.price || 0).toFixed(2)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
                   {course.is_enrolled ? (
                     <button
                       disabled
                       className="w-full py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2
-      bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-inner
-      cursor-default opacity-90"
+                        bg-gradient-to-r from-green-500 to-green-600 text-white shadow-inner
+                        cursor-default opacity-90"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -269,22 +362,35 @@ const CoursesPage = () => {
                     </button>
                   ) : course.instructor === user?.id ? (
                     <button
-                      onClick={() => navigate("/courses/" + course.id)}
+                      onClick={() => handleShowDetails(course.id)}
                       className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 rounded-xl font-semibold 
-      shadow-md hover:shadow-lg transition-all duration-300 
-      hover:scale-[1.03] active:scale-[0.97]"
+                        shadow-md hover:shadow-lg transition-all duration-300 
+                        hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2"
                     >
                       View Course
+                      <ArrowRight className="h-4 w-4" />
                     </button>
                   ) : (
-                    <button
-                      onClick={() => handleEnroll(course.id)}
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 rounded-xl font-semibold 
-      shadow-md hover:shadow-lg transition-all duration-300 
-      hover:scale-[1.03] active:scale-[0.97]"
-                    >
-                      Enroll Now
-                    </button>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => handleBuyNow(course.id)}
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 rounded-xl font-semibold 
+                          shadow-md hover:shadow-lg transition-all duration-300 
+                          hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2"
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                        Buy Now
+                      </button>
+                      <button
+                        onClick={() => handleShowDetails(course.id)}
+                        className="w-full bg-gray-100 text-gray-700 py-2.5 rounded-xl font-semibold 
+                          hover:bg-gray-200 transition-all duration-300 
+                          hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2"
+                      >
+                        Show Details
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
