@@ -14,6 +14,7 @@ const CoursesPage = () => {
   const [search, setSearch] = useState("");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
+  const [price, setPrice] = useState("");
   const [instructor, setInstructor] = useState("");
   const [topSellers, setTopSellers] = useState(false);
   const [page, setPage] = useState(1);
@@ -45,8 +46,15 @@ const CoursesPage = () => {
         if (selectedCategories.length > 0) {
           params.category = selectedCategories;
         }
-        if (priceMin !== "") params.price_min = priceMin;
-        if (priceMax !== "") params.price_max = priceMax;
+        // Handle price range selection
+        if (price) {
+          const [min, max] = price.split("-");
+          if (min !== undefined) params.price_min = min;
+          if (max && max !== "+") params.price_max = max;
+        } else {
+          if (priceMin !== "") params.price_min = priceMin;
+          if (priceMax !== "") params.price_max = priceMax;
+        }
         if (instructor.trim() !== "") params.instructor = instructor.trim();
         if (topSellers) params.top_sellers = 1;
 
@@ -64,7 +72,16 @@ const CoursesPage = () => {
       }
     };
     fetchCourses();
-  }, [search, selectedCategories, priceMin, priceMax, instructor, topSellers, page]);
+  }, [
+    search,
+    selectedCategories,
+    priceMin,
+    priceMax,
+    price,
+    instructor,
+    topSellers,
+    page,
+  ]);
 
   const toggleCategory = (id) => {
     setPage(1);
@@ -98,14 +115,17 @@ const CoursesPage = () => {
 
     try {
       const token = localStorage.getItem("accessToken");
-      
-      const response = await fetch(`http://localhost:8000/api/courses/${courseId}/payment/initiate/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+
+      const response = await fetch(
+        `http://localhost:8000/api/courses/${courseId}/payment/initiate/`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -113,7 +133,10 @@ const CoursesPage = () => {
         navigate(data.redirect_url);
       } else {
         const errorData = await response.json();
-        console.error("Payment initiation failed:", errorData.error || "Unknown error");
+        console.error(
+          "Payment initiation failed:",
+          errorData.error || "Unknown error"
+        );
         // You can add a toast notification here instead of alert
         // For now, just log the error
       }
@@ -132,10 +155,14 @@ const CoursesPage = () => {
     <div className="flex max-w-7xl mx-auto px-4 py-12 gap-8 mt-11">
       {/* Sidebar Filters */}
       <aside className="w-64 bg-white p-6 rounded-2xl shadow-lg h-fit">
-        <h3 className="font-bold text-lg mb-4 text-left text-indigo-700">Filters</h3>
+        <h3 className="font-bold text-lg mb-4 text-left text-indigo-700">
+          Filters
+        </h3>
         <div className="space-y-5">
           <div>
-            <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">Category</h4>
+            <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">
+              Category
+            </h4>
             <div className="space-y-3 max-h-64 overflow-auto pr-2">
               {categories.map((cat) => (
                 <label
@@ -155,7 +182,9 @@ const CoursesPage = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">Price range</h4>
+            <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">
+              Price range
+            </h4>
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -181,7 +210,9 @@ const CoursesPage = () => {
                 className="w-1/2 px-3 py-2 border rounded-lg"
               />
             </div>
-            <h4 className="font-semibold text-sm text-gray-700 mb-2">Price Range</h4>
+            <h4 className="font-semibold text-sm text-gray-700 mb-2">
+              Price Range
+            </h4>
             <select
               value={price}
               onChange={(e) => {
@@ -199,7 +230,9 @@ const CoursesPage = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">Top_Sellers</h4>
+            <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">
+              Top_Sellers
+            </h4>
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -215,7 +248,9 @@ const CoursesPage = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">Instructor</h4>
+            <h4 className="font-semibold text-sm text-indigo-600 mb-2 text-left">
+              Instructor
+            </h4>
             <input
               type="text"
               placeholder="Search instructor..."
@@ -289,7 +324,7 @@ const CoursesPage = () => {
                       <BookOpen className="h-12 w-12 text-blue-600" />
                     </div>
                   )}
-                  
+
                   {/* Category Badge */}
                   {course.category_name && (
                     <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-gray-700">
@@ -304,20 +339,22 @@ const CoursesPage = () => {
                   <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
                     {course.title}
                   </h3>
-                  
+
                   {/* Instructor */}
                   <p className="text-gray-600 text-sm mb-4">
                     By {course.instructor_name || "Unknown Instructor"}
                   </p>
-                  
+
                   {/* Description */}
                   <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-                    {course.description || "Learn from the best instructors in this comprehensive course."}
+                    {course.description ||
+                      "Learn from the best instructors in this comprehensive course."}
                   </p>
 
                   {/* Pricing Section */}
                   <div className="mb-4">
-                    {course.original_price && course.original_price > course.price ? (
+                    {course.original_price &&
+                    course.original_price > course.price ? (
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-2xl font-bold text-gray-900">
                           ${Number(course.price).toFixed(2)}
@@ -326,7 +363,13 @@ const CoursesPage = () => {
                           ${Number(course.original_price).toFixed(2)}
                         </span>
                         <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                          -{Math.round(((course.original_price - course.price) / course.original_price) * 100)}%
+                          -
+                          {Math.round(
+                            ((course.original_price - course.price) /
+                              course.original_price) *
+                              100
+                          )}
+                          %
                         </span>
                       </div>
                     ) : (
