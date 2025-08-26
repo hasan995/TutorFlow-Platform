@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { googleAuthCallback, updateProfile } from "../api/api";
 import RoleSelectionModal from "../components/RoleSelectionModal";
@@ -11,8 +11,15 @@ const GoogleAuthCallback = () => {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [authCode, setAuthCode] = useState("");
   const [googleUserInfo, setGoogleUserInfo] = useState(null);
+  const [processed, setProcessed] = useState(false); // Prevent duplicate processing
+  const hasRun = useRef(false); // Extra protection against React Strict Mode
 
   useEffect(() => {
+    // Prevent duplicate processing of the same code
+    if (processed || hasRun.current) return;
+
+    hasRun.current = true;
+
     const code = searchParams.get("code");
     const error = searchParams.get("error");
 
@@ -28,6 +35,8 @@ const GoogleAuthCallback = () => {
       return;
     }
 
+    // Mark as processed to prevent duplicate calls
+    setProcessed(true);
     setAuthCode(code);
 
     // Try exchanging code without role first; backend should return user with role if exists
@@ -68,12 +77,32 @@ const GoogleAuthCallback = () => {
           setShowRoleModal(true);
         }
       } catch (e) {
-        setError("Authentication failed. Please try again.");
+        console.error("Google OAuth callback error:", e);
+
+        // Extract error details for better user feedback
+        let errorMessage = "Authentication failed. Please try again.";
+
+        if (e.response?.data?.error) {
+          errorMessage = e.response.data.error;
+
+          // Special handling for specific errors
+          if (
+            e.response.data.error.includes("Malformed auth code") ||
+            e.response.data.error.includes("invalid_grant")
+          ) {
+            errorMessage =
+              "The authorization code has expired or been used already. Please try logging in again.";
+          } else if (e.response.data.error.includes("not configured")) {
+            errorMessage = "Google authentication is not properly configured.";
+          }
+        }
+
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
     })();
-  }, [searchParams]);
+  }, [searchParams, processed]); // Include processed in dependencies
 
   const handleRoleSelect = async (role) => {
     try {
