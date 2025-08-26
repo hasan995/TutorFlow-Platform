@@ -24,6 +24,10 @@ const LoginPage = () => {
       localStorage.setItem("accessToken", data.tokens.access);
       // localStorage.setItem("refreshToken", data.tokens.refresh);
       localStorage.setItem("user", JSON.stringify(data.user));
+
+      // Dispatch custom event to notify navbar and other components
+      window.dispatchEvent(new CustomEvent("userUpdated"));
+
       const token = localStorage.getItem("accessToken");
       // const decoded = JSON.parse(atob(token.split(".")[1]));
       console.log("decoded stuff: ", data);

@@ -47,8 +47,11 @@ const GoogleAuthCallback = () => {
           localStorage.setItem("accessToken", response.access_token);
         if (response.refresh_token)
           localStorage.setItem("refreshToken", response.refresh_token);
-        if (response.user)
+        if (response.user) {
           localStorage.setItem("user", JSON.stringify(response.user));
+          // Dispatch custom event to notify navbar and other components
+          window.dispatchEvent(new CustomEvent("userUpdated"));
+        }
 
         // If role was provided during registration, cleanup the session storage
         if (preselectedRole) sessionStorage.removeItem("oauth_role");
@@ -76,19 +79,26 @@ const GoogleAuthCallback = () => {
     try {
       setLoading(true);
       setError("");
+
+      // Create FormData for role update
+      const formData = new FormData();
+      formData.append("role", role);
+
       // Persist role to profile
-      const result = await updateProfile({ role });
-      const updatedUser =
-        result?.user || JSON.parse(localStorage.getItem("user") || "{}");
-      if (result?.user) {
-        localStorage.setItem("user", JSON.stringify(result.user));
-      } else if (updatedUser) {
-        updatedUser.role = role;
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-      }
+      const result = await updateProfile(formData);
+
+      // Update localStorage with the new role
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const updatedUser = result?.user || { ...currentUser, role: role };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      // Dispatch custom event to notify navbar and other components
+      window.dispatchEvent(new CustomEvent("userUpdated"));
+
       setShowRoleModal(false);
       navigate(role === "instructor" ? "/mycourses" : "/");
     } catch (err) {
+      console.error("Failed to save role:", err);
       setError("Failed to save role. Please try again.");
       setShowRoleModal(false);
     } finally {

@@ -90,6 +90,9 @@ const ProfilePage = () => {
         setProfile((prev) => ({ ...prev, role: "instructor" }));
         setFormData((prev) => ({ ...prev, role: "instructor" }));
       }
+
+      // Dispatch custom event to notify navbar and other components
+      window.dispatchEvent(new CustomEvent("userUpdated"));
       navigate("/mycourses");
     } catch (err) {
       console.error("Failed to update role", err);

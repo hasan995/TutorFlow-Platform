@@ -30,11 +30,45 @@ const Navbar = () => {
     window.location.href = "/login";
   };
 
+  const [user, setUser] = useState(null);
+  const [displayName, setDisplayName] = useState(null);
+  const [role, setRole] = useState(null);
+
   const isLoggedIn = !!localStorage.getItem("accessToken");
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
-  const displayName = user?.first_name || user?.username || null;
-  const role = user?.role || null;
+
+  // Function to refresh user data from localStorage
+  const refreshUserData = () => {
+    const storedUser = localStorage.getItem("user");
+    const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+    setUser(parsedUser);
+    setDisplayName(parsedUser?.first_name || parsedUser?.username || null);
+    setRole(parsedUser?.role || null);
+  };
+
+  // Refresh user data on component mount and when localStorage changes
+  useEffect(() => {
+    refreshUserData();
+
+    // Listen for storage changes (when user data is updated)
+    const handleStorageChange = (e) => {
+      if (e.key === "user") {
+        refreshUserData();
+      }
+    };
+
+    // Listen for custom user update events (for same-tab updates)
+    const handleUserUpdate = () => {
+      refreshUserData();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("userUpdated", handleUserUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("userUpdated", handleUserUpdate);
+    };
+  }, [isLoggedIn]);
 
   const navLinks = [
     { name: "Home", href: "/", icon: <Home className="h-4 w-4" /> },
