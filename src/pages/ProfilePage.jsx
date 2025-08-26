@@ -134,6 +134,28 @@ const ProfilePage = () => {
         </div>
 
         {/* Info Grid */}
+        {/* Bio */}
+        <div className="my-8 p-5 bg-gray-50 rounded-xl shadow-sm hover:shadow-md transition">
+          <div className="flex items-center gap-3 mb-2">
+            <BadgeCheck className="h-5 w-5 text-indigo-600" />
+            <span className="text-gray-700 font-semibold">Bio</span>
+          </div>
+          {editing ? (
+            <textarea
+              name="bio"
+              value={formData.bio || ""}
+              onChange={handleChange}
+              rows={4}
+              className="w-full border rounded-lg px-3 py-2 resize-none"
+              placeholder="Tell us a little about yourself..."
+            />
+          ) : (
+            <p className="text-gray-800 whitespace-pre-line">
+              {profile.bio || "No bio added yet."}
+            </p>
+          )}
+        </div>
+
         <div className="grid md:grid-cols-2 gap-6">
           {/* First Name */}
           <div className="p-6 bg-gray-50 rounded-xl shadow-sm hover:shadow-md transition">

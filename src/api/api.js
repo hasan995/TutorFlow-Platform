@@ -152,6 +152,11 @@ export const getCourse = async (id) => {
   return res.data;
 };
 
+export const getCourseRcommendation = async (id) => {
+  const res = await api.get(`courses/${id}/recommend/`);
+  return res.data;
+};
+
 // ========== ENROLLMENTS ENDPOINTS ==========
 
 // Enroll in a course

@@ -1,216 +1,346 @@
 // src/pages/CourseDetail.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { getCourse, getCourseRcommendation, enrollInCourse } from "../api/api";
 import {
-  getCourse,
-  getCourses,
-  enrollInCourse,
-  withdrawFromCourse,
-  getStudentEnrollments,
-} from "../api/api";
-import { BookOpen, GraduationCap, Loader2, ArrowRight } from "lucide-react";
-import CourseUpdateButton from "../components/CourseUpdateButton";
+  Star,
+  Users,
+  Clock,
+  Globe,
+  ArrowRight,
+  BookOpen,
+  CheckCircle,
+  Settings,
+  Loader2,
+} from "lucide-react";
+import Review from "../components/Reviews";
 
 const CourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [course, setCourse] = useState(null);
-  const [relatedCourses, setRelatedCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [enrolling, setEnrolling] = useState(false);
-  const [isEnrolled, setIsEnrolled] = useState(false);
-
-  const user = JSON.parse(localStorage.getItem("user")); // ✅ contains id + role
+  const [recs, setRecs] = useState([]);
+  const [showFullDesc, setShowFullDesc] = useState(false);
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    const fetchCourse = async () => {
       try {
-        // fetch course
         const data = await getCourse(id);
         setCourse(data);
-
-        // fetch related courses
-        if (data?.category?.id) {
-          const related = await getCourses({ category: data.category.id });
-          setRelatedCourses(
-            related.results.filter((c) => c.id !== parseInt(id))
-          );
-        }
-
-        // check if user is already enrolled
-        if (user?.id) {
-          const enrollments = await getStudentEnrollments(user.id);
-          const enrolled = enrollments.some(
-            (en) => en.course?.id === parseInt(id)
-          );
-          setIsEnrolled(enrolled);
-        }
-      } catch (error) {
-        console.error("Failed to load course", error);
+      } catch (err) {
+        console.error("Error fetching course:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    const fetchRecs = async () => {
+      try {
+        const data = await getCourseRcommendation(id);
+        setRecs(data);
+      } catch (err) {
+        console.error("Error fetching recommendations:", err);
+      }
+    };
+
+    fetchCourse();
+    fetchRecs();
   }, [id]);
 
-  const handleEnrollment = async () => {
-    if (!user) {
-      alert("You must be logged in to enroll!");
-      navigate("/login");
-      return;
-    }
-
-    setEnrolling(true);
+  const handleEnroll = async (courseId) => {
     try {
-      await enrollInCourse(id);
-      navigate("/courses/" + id);
-    } catch (error) {
-      console.error("Enrollment action failed", error);
-      alert("❌ Something went wrong, please try again.");
-    } finally {
-      setEnrolling(false);
+      const res = await enrollInCourse(courseId);
+      navigate(`/course/${courseId}`);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        navigate("/login");
+      } else {
+        console.error("Enrollment failed:", err);
+        alert(
+          err.response?.data?.message ||
+            "Enrollment failed. Please try again later."
+        );
+      }
     }
   };
-
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+      <div className="flex justify-center items-center h-[70vh]">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
       </div>
     );
   }
 
   if (!course) {
-    return <p className="text-center text-gray-600">Course not found.</p>;
+    return (
+      <div className="text-center text-gray-600 py-20">Course not found.</div>
+    );
   }
 
-  const isInstructor =
-    user?.role === "instructor" && course.instructor?.id === user?.id;
-
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12 mt-16">
-      {/* Course Hero */}
-      <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden mb-12 border border-gray-100">
-        {course.image ? (
-          <img
-            src={course.image}
-            alt={course.title}
-            className="w-full h-72 object-cover"
-          />
-        ) : (
-          <div className="w-full h-72 flex items-center justify-center bg-indigo-50">
-            <BookOpen className="h-20 w-20 text-indigo-700" />
-          </div>
-        )}
-        <div className="p-8">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
-            {course.title}
-          </h1>
-          <p className="text-lg text-gray-600 leading-relaxed mb-6">
-            {course.description}
-          </p>
+    <div className="mt-12">
+      {/* Hero Section */}
+      <section className="py-16 bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 text-white relative">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.05%22%3E%3Ccircle cx=%2230%22 cy=%2230%22 r=%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 
-          <div className="flex flex-wrap items-center gap-6 mb-8">
-            <span className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
-              <BookOpen className="h-4 w-4" />{" "}
-              {course.category_name || "Uncategorized"}
-            </span>
+        <div className="max-w-7xl mx-auto px-6 relative grid lg:grid-cols-2 gap-12 items-center">
+          <div className="text-left">
+            <h1 className="text-4xl sm:text-5xl font-bold mb-4">
+              {course.title}
+            </h1>
+            <div className="flex flex-wrap items-center gap-6 text-blue-100 text-sm mb-6">
+              <div className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-400" />
+                {course.average_rating?.toFixed(1) || "0"} (
+                {course.ratings_count} ratings)
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                {course.enrollments_count} students
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                {course.duration} hrs
+              </div>
+              <div className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                {course.language}
+              </div>
+            </div>
 
-            <button
-              onClick={() =>
-                navigate(`/instructor/${course.instructor?.id || ""}`)
-              }
-              className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-full text-sm font-medium hover:bg-purple-100 transition"
-            >
-              <GraduationCap className="h-4 w-4" />
-              {course.instructor?.name || "View Instructor"}
-            </button>
-
-            {course.price !== undefined && (
-              <span className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full text-lg font-bold">
-                ${Number(course.price).toFixed(2)}
-              </span>
+            {course.id &&
+            user.role === "instructor" &&
+            course.instructor === user.id ? (
+              <button
+                className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
+                onClick={() => {
+                  navigate("/courses/create?edit=" + course.id);
+                }}
+              >
+                Edit Course
+              </button>
+            ) : (
+              <button
+                className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
+                onClick={() => {
+                  course.is_enrolled
+                    ? navigate(`/courses/${course.id}`)
+                    : handleEnroll(course.id);
+                }}
+              >
+                {course.is_enrolled
+                  ? "Go to Course"
+                  : `Enroll Now - $${course.price}`}
+              </button>
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Enroll/Withdraw button */}
-            <button
-              onClick={handleEnrollment}
-              // disabled={enrolling}
-              className={`px-8 py-3 rounded-xl font-semibold text-white shadow-md transition-all duration-300 transform ${
-                enrolling
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : isEnrolled
-                  ? "bg-gradient-to-r from-red-500 to-pink-500 hover:shadow-lg hover:-translate-y-0.5"
-                  : "bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:-translate-y-0.5"
-              }`}
-            >
-              {enrolling ? "Processing..." : "Enroll Now"}
-            </button>
-
-            {/* Notification Button for Instructors */}
-            <CourseUpdateButton
-              courseId={parseInt(id)}
-              courseTitle={course.title}
-              isInstructor={isInstructor}
-            />
+          <div>
+            {course.image && (
+              <img
+                src={course.image}
+                alt={course.title}
+                className="rounded-2xl shadow-lg w-full max-h-[400px] object-cover"
+              />
+            )}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Related Courses */}
-      {relatedCourses.length > 0 && (
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Related Courses
+      {/* Description */}
+      <section className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-6 text-left">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Course Description
           </h2>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {relatedCourses.map((rel) => (
-              <div
-                key={rel.id}
-                onClick={() => navigate(`/courses/${rel.id}`)}
-                className="bg-white/80 backdrop-blur-md rounded-2xl shadow-md cursor-pointer hover:shadow-xl transition transform hover:-translate-y-1 border border-gray-100 overflow-hidden group"
-              >
-                {rel.image_url ? (
-                  <img
-                    src={rel.image_url}
-                    alt={rel.title}
-                    className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-44 flex items-center justify-center bg-indigo-50">
-                    <BookOpen className="h-12 w-12 text-indigo-700" />
-                  </div>
-                )}
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition">
-                    {rel.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                    {rel.description}
-                  </p>
-                  <div className="flex justify-between items-center text-sm text-blue-600 font-medium mb-3">
-                    <span>{rel.category?.name}</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </div>
-                  {rel.price !== undefined && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-green-600">
-                        ${Number(rel.price).toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          <p className="text-gray-700 leading-relaxed">
+            {showFullDesc
+              ? course.description
+              : `${course.description.slice(0, 400)}...`}
+          </p>
+          {course.description.length > 400 && (
+            <button
+              onClick={() => setShowFullDesc((prev) => !prev)}
+              className="mt-3 text-blue-600 font-medium hover:underline"
+            >
+              {showFullDesc ? "Show less" : "Show more"}
+            </button>
+          )}
         </div>
+      </section>
+
+      {/* What you’ll learn */}
+      {course.learning_objectives?.length > 0 && (
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-6xl mx-auto px-6 text-left">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+              <BookOpen className="h-6 w-6 text-blue-600 mr-2" />
+              What you’ll learn
+            </h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {course.learning_objectives.map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-500 mt-1" />
+                  <p className="text-gray-700">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Requirements & Audience */}
+      {(course.requirements?.length > 0 ||
+        course.target_audience?.length > 0) && (
+        <section className="py-16 bg-white">
+          <div className="max-w-6xl mx-auto px-6 text-left grid md:grid-cols-2 gap-12">
+            {course.requirements?.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  Requirements
+                </h2>
+                <ul className="space-y-2">
+                  {course.requirements.map((req, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-center gap-2 text-gray-700"
+                    >
+                      <CheckCircle className="h-5 w-5 text-blue-600" />
+                      {req}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {course.target_audience?.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  Who this course is for
+                </h2>
+                <ul className="space-y-2">
+                  {course.target_audience.map((aud, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-center gap-2 text-gray-700"
+                    >
+                      <CheckCircle className="h-5 w-5 text-purple-600" />
+                      {aud}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      <Review courseId={course.id} is_enrolled={course.is_enrolled}></Review>
+      {/* Instructor */}
+      {course.instructor_profile && (
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-6xl mx-auto px-6 text-left">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+              Instructor
+            </h2>
+            <div className="flex items-center gap-4">
+              <img
+                src={course.instructor_profile.image || "/default-avatar.png"}
+                alt={course.instructor_profile.full_name}
+                className="h-16 w-16 rounded-full object-cover"
+              />
+              <div>
+                <p className="font-semibold text-lg text-gray-900">
+                  {course.instructor_profile.first_name}{" "}
+                  {course.instructor_profile.last_name}
+                </p>
+                <p className="text-gray-600 text-sm">
+                  {course.instructor_profile.bio}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Recommendations */}
+      {recs.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-6 text-left">
+            <h2 className="text-2xl font-bold text-gray-800 mb-8">
+              You might also like
+            </h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 place-items-center">
+              {recs.map((rec) => (
+                <div
+                  key={rec.id}
+                  onClick={() => navigate(`/courses/${rec.id}`)}
+                  className="relative bg-white rounded-2xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1 cursor-pointer overflow-hidden group w-full max-w-sm"
+                >
+                  {/* Category badge */}
+                  {rec.category_name && (
+                    <span className="absolute top-3 left-3 bg-white text-blue text-xs font-semibold px-4 py-3 rounded-full shadow-md">
+                      {rec.category_name}
+                    </span>
+                  )}
+
+                  {rec.image && (
+                    <img
+                      src={rec.image}
+                      alt={rec.title}
+                      className="w-full h-44 object-cover"
+                    />
+                  )}
+
+                  <div className="p-2 flex flex-col items-center text-center">
+                    {/* Title */}
+                    <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition">
+                      {rec.title}
+                    </h3>
+
+                    {/* Instructor */}
+                    <p className="text-sm text-gray-500 mb-3">
+                      By{" "}
+                      <span className="font-medium text-gray-700">
+                        {rec.instructor_profile?.first_name}{" "}
+                        {rec.instructor_profile?.last_name}
+                      </span>
+                    </p>
+
+                    {/* Stats */}
+                    <div className="flex justify-center gap-5 text-sm text-gray-600 mb-4">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-yellow-400" />
+                        {Number(rec.average_rating || 0).toFixed(1)}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Users className="h-4 w-4" />
+                        {rec.enrollments_count}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4 text-gray-500" />
+                        {rec.duration ? Number(rec.duration).toFixed(1) : "0"}h
+                      </div>
+                    </div>
+
+                    {/* Price */}
+                    <p className="text-xl font-semibold text-600 mb-2">
+                      ${rec.price}
+                    </p>
+                  </div>
+
+                  {/* Bottom arrow bar */}
+                  <div className="w-full bg-blue-50 py-3 flex items-center justify-center gap-2 text-blue-600 font-medium group-hover:bg-blue-100 transition">
+                    <span>View Course</span>
+                    <ArrowRight className="h-5 w-5 transform group-hover:translate-x-1 transition" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );

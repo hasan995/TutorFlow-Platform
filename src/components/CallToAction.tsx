@@ -60,51 +60,6 @@ const CallToAction = () => {
               ))}
             </div>
           </div>
-          {/* <div className="relative">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold mb-2">
-                  Special Launch Offer
-                </h3>
-                <div className="flex items-center justify-center">
-                  <span className="text-4xl font-bold">Free</span>
-                  <span className="text-lg ml-2 text-blue-200">
-                    for first month
-                  </span>
-                </div>
-                <p className="text-blue-200 mt-2">
-                  Then $29/month, cancel anytime
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex justify-between py-2">
-                  <span className="text-blue-100">Full course library</span>
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-blue-100">Expert support</span>
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-blue-100">Certificates</span>
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-blue-100">Community access</span>
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                </div>
-              </div>
-
-              <button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 mt-6">
-                Claim Free Month
-              </button>
-
-              <p className="text-xs text-blue-200 text-center mt-4">
-                No commitment • Cancel anytime • 30-day guarantee
-              </p>
-            </div>
-          </div> */}
         </div>
       </div>
     </section>

@@ -1,12 +1,19 @@
 // src/pages/CreateCourse.jsx
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { getCategories, createCourse, getCourse, updateCourse } from "../api/api";
+import {
+  getCategories,
+  createCourse,
+  getCourse,
+  updateCourse,
+} from "../api/api";
 import {
   BookOpen,
   Loader2,
   CheckCircle,
   Image as ImageIcon,
+  PlusCircle,
+  XCircle,
 } from "lucide-react";
 
 const CreateCourse = () => {
@@ -21,6 +28,12 @@ const CreateCourse = () => {
     category: "",
     price: "",
     image: null,
+    duration: "",
+    level: "Beginner",
+    language: "English",
+    learning_objectives: [""],
+    requirements: [""],
+    target_audience: [""],
   });
   const [preview, setPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -42,7 +55,7 @@ const CreateCourse = () => {
     fetchCats();
   }, []);
 
-  // Load existing course when in edit mode (query param ?edit=<id>)
+  // Load existing course when in edit mode
   useEffect(() => {
     const id = searchParams.get("edit");
     if (!id) return;
@@ -56,7 +69,16 @@ const CreateCourse = () => {
           title: data.title || "",
           description: data.description || "",
           price: data.price || "",
-          // category will be set once categories are loaded
+          duration: data.duration || "",
+          level: data.level || "Beginner",
+          language: data.language || "English",
+          learning_objectives: data.learning_objectives?.length
+            ? data.learning_objectives
+            : [""],
+          requirements: data.requirements?.length ? data.requirements : [""],
+          target_audience: data.target_audience?.length
+            ? data.target_audience
+            : [""],
         }));
         setPreview(data.image || null);
         setCourseCategoryName(data.category_name || "");
@@ -66,7 +88,7 @@ const CreateCourse = () => {
     })();
   }, [searchParams]);
 
-  // Once categories are loaded, map category_name to its id for the select
+  // Match category_name to its id for the select
   useEffect(() => {
     if (!isEdit || !courseCategoryName || categories.length === 0) return;
     const matched = categories.find((c) => c.name === courseCategoryName);
@@ -77,6 +99,22 @@ const CreateCourse = () => {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleArrayChange = (field, index, value) => {
+    const updated = [...form[field]];
+    updated[index] = value;
+    setForm({ ...form, [field]: updated });
+  };
+
+  const addArrayField = (field) => {
+    setForm({ ...form, [field]: [...form[field], ""] });
+  };
+
+  const removeArrayField = (field, index) => {
+    const updated = [...form[field]];
+    updated.splice(index, 1);
+    setForm({ ...form, [field]: updated.length ? updated : [""] });
   };
 
   const handleImageChange = (e) => {
@@ -92,30 +130,44 @@ const CreateCourse = () => {
     setSubmitting(true);
     try {
       if (isEdit && editId) {
-        const payload = {
-          title: form.title,
-          description: form.description,
-          category: form.category,
-          price: form.price,
-        };
-        await updateCourse(editId, payload);
+        const formData = new FormData();
+        Object.entries(form).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value));
+          } else if (value !== null) {
+            formData.append(key, value);
+          }
+        });
+        await updateCourse(editId, formData);
         setSuccess(true);
       } else {
         const formData = new FormData();
-        formData.append("title", form.title);
-        formData.append("description", form.description);
-        formData.append("category", form.category);
-        formData.append("price", form.price);
-        if (form.image) {
-          formData.append("image", form.image);
-        }
+        Object.entries(form).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value));
+          } else if (value !== null) {
+            formData.append(key, value);
+          }
+        });
         await createCourse(formData);
         setSuccess(true);
-        setForm({ title: "", description: "", category: "", price: "", image: null });
+        setForm({
+          title: "",
+          description: "",
+          category: "",
+          price: "",
+          image: null,
+          duration: "",
+          level: "Beginner",
+          language: "English",
+          learning_objectives: [""],
+          requirements: [""],
+          target_audience: [""],
+        });
         setPreview(null);
       }
     } catch (err) {
-      console.error("Error creating course:", err);
+      console.error("Error saving course:", err);
     } finally {
       setSubmitting(false);
     }
@@ -136,7 +188,9 @@ const CreateCourse = () => {
         {success && (
           <div className="flex items-center gap-2 p-4 mb-6 bg-green-50 border border-green-200 rounded-xl text-green-700">
             <CheckCircle className="h-5 w-5" />
-            Course created successfully!
+            {isEdit
+              ? "Course updated successfully!"
+              : "Course created successfully!"}
           </div>
         )}
 
@@ -216,6 +270,93 @@ const CreateCourse = () => {
             />
           </div>
 
+          {/* Duration */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Duration (hours)
+            </label>
+            <input
+              type="number"
+              name="duration"
+              value={form.duration}
+              onChange={handleChange}
+              step="0.25"
+              min="0"
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+              placeholder="e.g., 1.5 = 1h 30m"
+            />
+          </div>
+
+          {/* Level */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Level
+            </label>
+            <select
+              name="level"
+              value={form.level}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+            >
+              <option>Beginner</option>
+              <option>Intermediate</option>
+              <option>Advanced</option>
+            </select>
+          </div>
+
+          {/* Language */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Language
+            </label>
+            <input
+              type="text"
+              name="language"
+              value={form.language}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+              placeholder="e.g., English"
+            />
+          </div>
+
+          {/* Dynamic Array Fields */}
+          {["learning_objectives", "requirements", "target_audience"].map(
+            (field) => (
+              <div key={field}>
+                <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                  {field.replace("_", " ")}
+                </label>
+                {form[field].map((val, idx) => (
+                  <div key={idx} className="flex items-center gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={val}
+                      onChange={(e) =>
+                        handleArrayChange(field, idx, e.target.value)
+                      }
+                      className="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
+                      placeholder={`Enter ${field.replace("_", " ")}...`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeArrayField(field, idx)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <XCircle className="h-5 w-5" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => addArrayField(field)}
+                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                >
+                  <PlusCircle className="h-4 w-4" /> Add
+                </button>
+              </div>
+            )
+          )}
+
           {/* Image Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -251,10 +392,13 @@ const CreateCourse = () => {
           >
             {submitting ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" /> {isEdit ? "Updating..." : "Creating..."}
+                <Loader2 className="h-5 w-5 animate-spin" />{" "}
+                {isEdit ? "Updating..." : "Creating..."}
               </>
+            ) : isEdit ? (
+              "Update Course"
             ) : (
-              isEdit ? "Update Course" : "Create Course"
+              "Create Course"
             )}
           </button>
         </form>
