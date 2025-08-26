@@ -1,14 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { getProfile, updateProfile } from "../api/api";
 import { User, Mail, BadgeCheck, Upload } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const ProfilePage = () => {
+  const PLACEHOLDER_IMAGE = "https://www.gravatar.com/avatar/?d=mp";
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
   const [saving, setSaving] = useState(false); // ✅ new state
+  const navigate = useNavigate();
+
+  const handleImageError = (e) => {
+    e.currentTarget.src = PLACEHOLDER_IMAGE;
+    e.currentTarget.onerror = null;
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -64,6 +72,33 @@ const ProfilePage = () => {
     }
   };
 
+  const handleBecomeInstructor = async () => {
+    try {
+      setSaving(true);
+      const form = new FormData();
+      form.append("role", "instructor");
+      const result = await updateProfile(form);
+      const updatedUser =
+        result?.user || JSON.parse(localStorage.getItem("user") || "{}");
+      if (result?.user) {
+        localStorage.setItem("user", JSON.stringify(result.user));
+        setProfile(result.user);
+        setFormData(result.user);
+      } else if (updatedUser) {
+        updatedUser.role = "instructor";
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setProfile((prev) => ({ ...prev, role: "instructor" }));
+        setFormData((prev) => ({ ...prev, role: "instructor" }));
+      }
+      navigate("/mycourses");
+    } catch (err) {
+      console.error("Failed to update role", err);
+      alert("Failed to update role. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[60vh]">
@@ -91,17 +126,22 @@ const ProfilePage = () => {
                 src={imagePreview}
                 alt="Preview"
                 className="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-white"
+                onError={handleImageError}
               />
             ) : profile.image ? (
               <img
                 src={profile.image}
                 alt={profile.username}
                 className="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-white"
+                onError={handleImageError}
               />
             ) : (
-              <div className="w-32 h-32 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
-                <User className="h-16 w-16 text-white" />
-              </div>
+              <img
+                src={PLACEHOLDER_IMAGE}
+                alt="Placeholder avatar"
+                className="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-white"
+                onError={handleImageError}
+              />
             )}
 
             {editing && (
@@ -190,6 +230,28 @@ const ProfilePage = () => {
             ) : (
               <p className="text-gray-800">{profile.email}</p>
             )}
+          </div>
+
+          {/* Role */}
+          <div className="p-6 bg-gray-50 rounded-xl shadow-sm hover:shadow-md transition md:col-span-2">
+            <div className="flex items-center gap-3 mb-2">
+              <BadgeCheck className="h-5 w-5 text-indigo-600" />
+              <span className="text-gray-700 font-semibold">Role</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 capitalize">
+                {profile.role}
+              </span>
+              {profile.role === "student" && (
+                <button
+                  onClick={handleBecomeInstructor}
+                  disabled={saving}
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold shadow-md hover:shadow-lg disabled:opacity-50"
+                >
+                  {saving ? "Updating..." : "Become Instructor"}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Username */}

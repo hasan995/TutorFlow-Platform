@@ -46,7 +46,6 @@ const CoursesPage = () => {
         if (selectedCategories.length > 0) {
           params.category = selectedCategories;
         }
-        // Handle price range selection
         if (price) {
           const [min, max] = price.split("-");
           if (min !== undefined) params.price_min = min;
@@ -61,10 +60,6 @@ const CoursesPage = () => {
         const data = await getCourses(params);
         setCourses(data.results);
         setPages(data.pages);
-        console.log("Courses data: ", data.results);
-
-        // 👇 small delay before removing skeleton (300–500ms feels natural)
-
         setLoading(false);
       } catch (err) {
         console.error("Failed to load courses", err);
@@ -92,7 +87,6 @@ const CoursesPage = () => {
 
   const handleEnroll = async (id) => {
     if (!isLoggedIn) {
-      console.log("User not logged in, redirecting to login");
       navigate("/login");
       return;
     }
@@ -101,14 +95,11 @@ const CoursesPage = () => {
       navigate(`/courses/${id}`);
     } catch (err) {
       console.error("Failed to enroll", err);
-      // You can add a toast notification here instead of alert
-      // For now, just log the error
     }
   };
 
   const handleBuyNow = async (courseId) => {
     if (!isLoggedIn) {
-      console.log("User not logged in, redirecting to login");
       navigate("/login");
       return;
     }
@@ -129,21 +120,13 @@ const CoursesPage = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Payment initiated successfully:", data);
         navigate(data.redirect_url);
       } else {
         const errorData = await response.json();
-        console.error(
-          "Payment initiation failed:",
-          errorData.error || "Unknown error"
-        );
-        // You can add a toast notification here instead of alert
-        // For now, just log the error
+        console.error("Payment initiation failed:", errorData.error);
       }
     } catch (error) {
       console.error("Error initiating payment:", error);
-      // You can add a toast notification here instead of alert
-      // For now, just log the error
     }
   };
 
@@ -290,14 +273,15 @@ const CoursesPage = () => {
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="animate-pulse bg-white rounded-2xl shadow-lg overflow-hidden"
+                className="animate-pulse bg-white rounded-2xl shadow-lg overflow-hidden h-[450px] md:h-[480px] lg:h-[500px] flex flex-col"
               >
-                <div className="bg-gray-300 h-40 w-full"></div>
-                <div className="p-6 space-y-3">
+                <div className="bg-gray-300 h-40 w-full flex-shrink-0"></div>
+                <div className="p-6 space-y-3 flex flex-col flex-1">
                   <div className="h-5 bg-gray-300 rounded w-3/4"></div>
                   <div className="h-4 bg-gray-200 rounded w-full"></div>
-                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                  <div className="h-10 bg-gray-300 rounded mt-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6 flex-1"></div>
+                  <div className="h-10 bg-gray-300 rounded mt-4 flex-shrink-0"></div>
+                  <div className="h-10 bg-gray-300 rounded flex-shrink-0"></div>
                 </div>
               </div>
             ))}
@@ -309,10 +293,10 @@ const CoursesPage = () => {
             {courses.map((course) => (
               <div
                 key={course.id}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
+                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 h-[450px] md:h-[480px] lg:h-[500px] flex flex-col"
               >
                 {/* Course Image */}
-                <div className="relative">
+                <div className="relative flex-shrink-0">
                   {course.image ? (
                     <img
                       src={course.image}
@@ -334,107 +318,113 @@ const CoursesPage = () => {
                 </div>
 
                 {/* Course Content */}
-                <div className="p-6">
-                  {/* Course Title */}
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
-                    {course.title}
-                  </h3>
+                <div className="p-6 flex flex-col flex-1 justify-between">
+                  {/* Top Content */}
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">
+                      {course.title}
+                    </h3>
 
-                  {/* Instructor */}
-                  <p className="text-gray-600 text-sm mb-4">
-                    By {course.instructor_name || "Unknown Instructor"}
-                  </p>
+                    <p className="text-gray-600 text-sm mb-3">
+                      By {course.instructor_name || "Unknown Instructor"}
+                    </p>
 
-                  {/* Description */}
-                  <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-                    {course.description ||
-                      "Learn from the best instructors in this comprehensive course."}
-                  </p>
-
-                  {/* Pricing Section */}
-                  <div className="mb-4">
-                    {course.original_price &&
-                    course.original_price > course.price ? (
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl font-bold text-gray-900">
-                          ${Number(course.price).toFixed(2)}
-                        </span>
-                        <span className="text-lg text-gray-500 line-through">
-                          ${Number(course.original_price).toFixed(2)}
-                        </span>
-                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                          -
-                          {Math.round(
-                            ((course.original_price - course.price) /
-                              course.original_price) *
-                              100
-                          )}
-                          %
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="text-2xl font-bold text-gray-900 mb-2">
-                        ${Number(course.price || 0).toFixed(2)}
-                      </div>
-                    )}
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {course.description ||
+                        "Learn from the best instructors in this comprehensive course."}
+                    </p>
                   </div>
 
-                  {/* Action Buttons */}
-                  {course.is_enrolled ? (
-                    <button
-                      disabled
-                      className="w-full py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2
-                        bg-gradient-to-r from-green-500 to-green-600 text-white shadow-inner
-                        cursor-default opacity-90"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      Already Enrolled
-                    </button>
-                  ) : course.instructor === user?.id ? (
-                    <button
-                      onClick={() => handleShowDetails(course.id)}
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 rounded-xl font-semibold 
-                        shadow-md hover:shadow-lg transition-all duration-300 
-                        hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2"
-                    >
-                      View Course
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => handleBuyNow(course.id)}
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 rounded-xl font-semibold 
-                          shadow-md hover:shadow-lg transition-all duration-300 
-                          hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2"
-                      >
-                        <ShoppingCart className="h-4 w-4" />
-                        Buy Now
-                      </button>
-                      <button
-                        onClick={() => handleShowDetails(course.id)}
-                        className="w-full bg-gray-100 text-gray-700 py-2.5 rounded-xl font-semibold 
-                          hover:bg-gray-200 transition-all duration-300 
-                          hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2"
-                      >
-                        Show Details
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
+                  {/* Bottom Content */}
+                  <div className="flex-shrink-0 w-full">
+                    {/* Pricing Section */}
+                    <div className="mb-4 flex flex-col items-center justify-center text-center">
+                      {course.original_price &&
+                      course.original_price > course.price ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-2xl font-bold text-gray-900">
+                            ${Number(course.price).toFixed(2)}
+                          </span>
+                          <span className="text-lg text-gray-500 line-through">
+                            ${Number(course.original_price).toFixed(2)}
+                          </span>
+                          <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                            -
+                            {Math.round(
+                              ((course.original_price - course.price) /
+                                course.original_price) *
+                                100
+                            )}
+                            %
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-2xl font-bold text-gray-900">
+                          ${Number(course.price || 0).toFixed(2)}
+                        </span>
+                      )}
                     </div>
-                  )}
+
+                    {/* Action Buttons */}
+                    <div className="space-y-2">
+                      {course.is_enrolled ? (
+                        <>
+                          <button
+                            disabled
+                            className="w-full py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white shadow-inner cursor-default opacity-90"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            Already Enrolled
+                          </button>
+                          <button
+                            onClick={() => handleShowDetails(course.id)}
+                            className="w-full bg-gray-100 text-gray-700 py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2"
+                          >
+                            Show Details
+                            <ArrowRight className="h-4 w-4" />
+                          </button>
+                        </>
+                      ) : course.instructor === user?.id ? (
+                        <button
+                          onClick={() => handleShowDetails(course.id)}
+                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2 mt-[68px]"
+                        >
+                          View Course
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleBuyNow(course.id)}
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2"
+                          >
+                            <ShoppingCart className="h-4 w-4" />
+                            Buy Now
+                          </button>
+                          <button
+                            onClick={() => handleShowDetails(course.id)}
+                            className="w-full bg-gray-100 text-gray-700 py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2"
+                          >
+                            Show Details
+                            <ArrowRight className="h-4 w-4" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

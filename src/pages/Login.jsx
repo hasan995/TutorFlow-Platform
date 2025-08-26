@@ -31,8 +31,9 @@ const LoginPage = () => {
       // set axios Authorization header for future requests
       // setAuthToken(data.tokens.access);
 
-      // Redirect to homepage
-      window.location.href = "/";
+      // Redirect by role
+      const role = data?.user?.role;
+      window.location.href = role === "instructor" ? "/mycourses" : "/";
     } catch (err) {
       setError(err.response?.data?.detail || "Invalid Credentials");
     } finally {
@@ -47,7 +48,7 @@ const LoginPage = () => {
 
       const redirectUri = `${window.location.origin}/auth/callback`;
       const response = await getGoogleAuthUrl(redirectUri);
-      
+
       // Redirect to Google OAuth2
       window.location.href = response.auth_url;
     } catch (err) {
@@ -124,7 +125,9 @@ const LoginPage = () => {
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              <span className="px-2 bg-white text-gray-500">
+                Or continue with
+              </span>
             </div>
           </div>
 
@@ -157,7 +160,9 @@ const LoginPage = () => {
                 />
               </svg>
             )}
-            <span>{googleLoading ? "Connecting..." : "Continue with Google"}</span>
+            <span>
+              {googleLoading ? "Connecting..." : "Continue with Google"}
+            </span>
           </button>
 
           <p className="mt-6 text-center text-gray-600 text-sm">

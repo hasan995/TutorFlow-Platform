@@ -86,11 +86,9 @@ export const getGoogleAuthUrl = async (redirectUri) => {
 
 // Handle Google OAuth2 callback
 export const googleAuthCallback = async (code, redirectUri, role) => {
-  const res = await api.post("oauth2/google/callback/", {
-    code,
-    redirect_uri: redirectUri,
-    role,
-  });
+  const payload = { code, redirect_uri: redirectUri };
+  if (role) payload.role = role;
+  const res = await api.post("oauth2/google/callback/", payload);
   return res.data;
 };
 
