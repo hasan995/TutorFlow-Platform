@@ -38,6 +38,7 @@ function App() {
             <Route path="/sessions/:id" element={<SessionDetail />} />
             <Route path="/sessions/create" element={<CreateSession />} />
             <Route path="/courses/:id" element={<EnrolledCourseDetais />} />
+            <Route path="/courses/:id/payment" element={<PaymentPage />} />
           </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

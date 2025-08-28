@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getProfile, updateProfile } from "../api/api";
 import { User, Mail, BadgeCheck, Upload } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import InterestsPopup from "../components/Interests";
 
 const ProfilePage = () => {
   const PLACEHOLDER_IMAGE = "https://www.gravatar.com/avatar/?d=mp";
@@ -11,18 +11,22 @@ const ProfilePage = () => {
   const [formData, setFormData] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
   const [saving, setSaving] = useState(false); // ✅ new state
-  const navigate = useNavigate();
+  const [showInterestsPopup, setShowInterestsPopup] = useState(false);
 
-  const handleImageError = (e) => {
-    e.currentTarget.src = PLACEHOLDER_IMAGE;
-    e.currentTarget.onerror = null;
-  };
+  // useEffect(() => {
+  //   if (showInterestsPopup) {
+  //     document.body.style.overflow = "hidden";
+  //   } else {
+  //     document.body.style.overflow = "auto";
+  //   }
+  // }, [showInterestsPopup]);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const data = await getProfile();
         setProfile(data);
+        console.log(data);
         setFormData(data); // initialize formData with profile
       } catch (err) {
         console.log("Failed to load profile", err);
@@ -53,6 +57,7 @@ const ProfilePage = () => {
       const form = new FormData();
 
       for (let key in formData) {
+        if (key === "interests") continue;
         if (key === "image") {
           // Only append if it's a File object
           if (formData.image instanceof File) {
@@ -177,6 +182,28 @@ const ProfilePage = () => {
         </div>
 
         {/* Info Grid */}
+        {/* Bio */}
+        <div className="my-8 p-5 bg-gray-50 rounded-xl shadow-sm hover:shadow-md transition">
+          <div className="flex items-center gap-3 mb-2">
+            <BadgeCheck className="h-5 w-5 text-indigo-600" />
+            <span className="text-gray-700 font-semibold">Bio</span>
+          </div>
+          {editing ? (
+            <textarea
+              name="bio"
+              value={formData.bio || ""}
+              onChange={handleChange}
+              rows={4}
+              className="w-full border rounded-lg px-3 py-2 resize-none"
+              placeholder="Tell us a little about yourself..."
+            />
+          ) : (
+            <p className="text-gray-800 whitespace-pre-line">
+              {profile.bio || "No bio added yet."}
+            </p>
+          )}
+        </div>
+
         <div className="grid md:grid-cols-2 gap-6">
           {/* First Name */}
           <div className="p-6 bg-gray-50 rounded-xl shadow-sm hover:shadow-md transition">
@@ -279,6 +306,12 @@ const ProfilePage = () => {
 
         {/* Actions */}
         <div className="mt-8 flex justify-end gap-4">
+          <button
+            onClick={() => setShowInterestsPopup(true)}
+            className="px-6 py-2 rounded-lg bg-gradient-to-r from-green-600 to-blue-600 text-white font-semibold shadow-md hover:shadow-lg"
+          >
+            Manage Interests
+          </button>
           {editing ? (
             <>
               <button
@@ -305,6 +338,12 @@ const ProfilePage = () => {
             </button>
           )}
         </div>
+        {showInterestsPopup && (
+          <InterestsPopup
+            onClose={() => setShowInterestsPopup(false)}
+            // user={profile}
+          />
+        )}
       </div>
     </div>
   );

@@ -22,7 +22,6 @@ const LoginPage = () => {
 
       // Save tokens + user info
       localStorage.setItem("accessToken", data.tokens.access);
-      // localStorage.setItem("refreshToken", data.tokens.refresh);
       localStorage.setItem("user", JSON.stringify(data.user));
 
       // Dispatch custom event to notify navbar and other components

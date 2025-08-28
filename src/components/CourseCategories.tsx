@@ -44,7 +44,8 @@ const CourseCategories = () => {
     const fetchCategories = async () => {
       try {
         const data = await getCategories();
-        setCategories(data);
+        setCategories(data.slice(0, 6));
+        console.log(data);
       } catch (err) {
         console.error("Failed to fetch categories:", err);
       } finally {

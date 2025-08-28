@@ -23,10 +23,20 @@ export default function CourseNotesSection({ courseId }) {
 
   const user = JSON.parse(localStorage.getItem("user"));
 
+  const [instructorChecked, setInstructorChecked] = useState(false);
+
   useEffect(() => {
+    const run = async () => {
+      await checkIfInstructor();
+      setInstructorChecked(true); // mark that it’s done
+    };
+    run();
+  }, []); // only once on mount
+
+  useEffect(() => {
+    if (!instructorChecked) return;
     fetchNotes(page);
-    checkIfInstructor();
-  }, [page]);
+  }, [page, instructorChecked]);
 
   const fetchNotes = async (pageNumber = 1) => {
     setLoading(true);
@@ -87,10 +97,10 @@ export default function CourseNotesSection({ courseId }) {
   };
 
   return (
-    <div className="bg-white shadow-xl rounded-2xl p-8 mt-8">
-      <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-6">
+    <div className="bg-white shadow-xl rounded-2xl px-8 pb-4">
+      {/* <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-6">
         Course Notes
-      </h2>
+      </h2> */}
 
       {/* Loading spinner */}
       {loading ? (
@@ -189,12 +199,6 @@ export default function CourseNotesSection({ courseId }) {
                   : "Post Note"}
               </button>
             </form>
-          )}
-
-          {isInstructor && (
-            <p className="text-gray-500 italic">
-              You are the instructor of this course and cannot post notes.
-            </p>
           )}
         </>
       )}

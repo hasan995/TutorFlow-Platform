@@ -150,31 +150,21 @@ export const getCourse = async (id) => {
   return res.data;
 };
 
-// ========== PAYMENT ENDPOINTS ==========
-
-// Initiate payment for a course
-export const initiatePayment = async (courseId) => {
-  const res = await api.post(`courses/${courseId}/payment/initiate/`);
+export const getCourseRcommendation = async (id) => {
+  const res = await api.get(`courses/${id}/recommend/`);
   return res.data;
 };
 
-// Complete payment
-export const completePayment = async (paymentId) => {
-  const res = await api.post(`courses/payment/${paymentId}/complete/`);
-  return res.data;
-};
-
-// Get payment status
-export const getPaymentStatus = async (paymentId) => {
-  const res = await api.get(`courses/payment/${paymentId}/status/`);
+export const getUserRecommendation = async () => {
+  const res = await api.get(`courses/recommend/`);
   return res.data;
 };
 
 // ========== ENROLLMENTS ENDPOINTS ==========
 
 // Enroll in a course
-export const enrollInCourse = async (courseId) => {
-  const res = await api.post(`courses/${courseId}/enroll/`);
+export const enrollInCourse = async (courseId, data) => {
+  const res = await api.post(`courses/${courseId}/enroll/`, data);
   return res.data;
 };
 
@@ -310,3 +300,13 @@ export const deleteNote = async (noteId) => {
 };
 
 export default api;
+
+//Payment
+
+export const createPaymentIntent = async (courseId, data) => {
+  const res = await api.post(
+    `courses/${courseId}/create_payment_intent/`,
+    data
+  );
+  return res.data;
+};
