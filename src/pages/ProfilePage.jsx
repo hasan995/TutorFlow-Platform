@@ -56,6 +56,7 @@ const ProfilePage = () => {
       const form = new FormData();
 
       for (let key in formData) {
+        if (key === "interests") continue;
         if (key === "image") {
           // Only append if it's a File object
           if (formData.image instanceof File) {
