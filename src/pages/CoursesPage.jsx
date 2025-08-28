@@ -217,7 +217,11 @@ const CoursesPage = () => {
                   {course.description}
                 </p>
                 <p className="text-sm text-gray-500 mb-2">
-                  By {course.instructor_profile?.name || "Unknown Instructor"}
+                  By{" "}
+                  {course.instructor_profile?.first_name +
+                    "" +
+                    course.instructor_profile?.last_name ||
+                    "Unknown Instructor"}
                 </p>
                 <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
                   <div className="flex items-center gap-1">

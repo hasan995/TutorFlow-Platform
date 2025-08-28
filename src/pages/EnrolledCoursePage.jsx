@@ -8,14 +8,33 @@ import {
   SkipBack,
   SkipForward,
   PlayCircle,
+  X,
 } from "lucide-react";
+
+// Simple reusable modal
+const Modal = ({ isOpen, onClose, children }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-white rounded-2xl shadow-xl p-6 relative w-full max-w-lg">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 const CourseDetailsPage = () => {
   const { id } = useParams();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("notes");
-  const [addingVideo, setAddingVideo] = useState(false);
+  const [showAddVideoModal, setShowAddVideoModal] = useState(false);
   const [videoForm, setVideoForm] = useState({
     title: "",
     url: "",
@@ -79,7 +98,7 @@ const CourseDetailsPage = () => {
         ...prev,
         videos: [...(prev.videos || []), created],
       }));
-      setAddingVideo(false);
+      setShowAddVideoModal(false);
       setVideoForm({ title: "", url: "", description: "", order: 0 });
     } catch (e) {
       console.error(e);
@@ -137,19 +156,21 @@ const CourseDetailsPage = () => {
             {isOwnerInstructor && (
               <div className="mb-6 flex flex-wrap gap-3">
                 <button
-                  onClick={() => setAddingVideo((v) => !v)}
+                  onClick={() => setShowAddVideoModal(true)}
                   className="px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow-md hover:bg-blue-700 transition"
                 >
-                  {addingVideo ? "Cancel" : "Add Video"}
+                  Add Video
                 </button>
               </div>
             )}
 
-            {isOwnerInstructor && addingVideo && (
-              <form
-                onSubmit={handleAddVideo}
-                className="mb-8 grid gap-4 max-w-xl bg-white border rounded-xl p-4 shadow-sm"
-              >
+            {/* Add Video Modal */}
+            <Modal
+              isOpen={showAddVideoModal}
+              onClose={() => setShowAddVideoModal(false)}
+            >
+              <h2 className="text-lg font-semibold mb-4">Add New Video</h2>
+              <form onSubmit={handleAddVideo} className="grid gap-4">
                 <input
                   type="text"
                   placeholder="Video Title"
@@ -196,7 +217,7 @@ const CourseDetailsPage = () => {
                   Save Video
                 </button>
               </form>
-            )}
+            </Modal>
 
             {Array.isArray(course.videos) && course.videos.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

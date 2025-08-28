@@ -157,11 +157,16 @@ export const getCourseRcommendation = async (id) => {
   return res.data;
 };
 
+export const getUserRecommendation = async () => {
+  const res = await api.get(`courses/recommend/`);
+  return res.data;
+};
+
 // ========== ENROLLMENTS ENDPOINTS ==========
 
 // Enroll in a course
-export const enrollInCourse = async (courseId) => {
-  const res = await api.post(`courses/${courseId}/enroll/`);
+export const enrollInCourse = async (courseId, data) => {
+  const res = await api.post(`courses/${courseId}/enroll/`, data);
   return res.data;
 };
 
@@ -297,3 +302,13 @@ export const deleteNote = async (noteId) => {
 };
 
 export default api;
+
+//Payment
+
+export const createPaymentIntent = async (courseId, data) => {
+  const res = await api.post(
+    `courses/${courseId}/create_payment_intent/`,
+    data
+  );
+  return res.data;
+};

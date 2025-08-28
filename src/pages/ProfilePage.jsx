@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getProfile, updateProfile } from "../api/api";
 import { User, Mail, BadgeCheck, Upload } from "lucide-react";
+import InterestsPopup from "../components/Interests";
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
@@ -9,12 +10,22 @@ const ProfilePage = () => {
   const [formData, setFormData] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
   const [saving, setSaving] = useState(false); // ✅ new state
+  const [showInterestsPopup, setShowInterestsPopup] = useState(false);
+
+  // useEffect(() => {
+  //   if (showInterestsPopup) {
+  //     document.body.style.overflow = "hidden";
+  //   } else {
+  //     document.body.style.overflow = "auto";
+  //   }
+  // }, [showInterestsPopup]);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const data = await getProfile();
         setProfile(data);
+        console.log(data);
         setFormData(data); // initialize formData with profile
       } catch (err) {
         console.log("Failed to load profile", err);
@@ -236,6 +247,12 @@ const ProfilePage = () => {
 
         {/* Actions */}
         <div className="mt-8 flex justify-end gap-4">
+          <button
+            onClick={() => setShowInterestsPopup(true)}
+            className="px-6 py-2 rounded-lg bg-gradient-to-r from-green-600 to-blue-600 text-white font-semibold shadow-md hover:shadow-lg"
+          >
+            Manage Interests
+          </button>
           {editing ? (
             <>
               <button
@@ -262,6 +279,12 @@ const ProfilePage = () => {
             </button>
           )}
         </div>
+        {showInterestsPopup && (
+          <InterestsPopup
+            onClose={() => setShowInterestsPopup(false)}
+            // user={profile}
+          />
+        )}
       </div>
     </div>
   );

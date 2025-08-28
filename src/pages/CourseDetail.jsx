@@ -127,7 +127,7 @@ const CourseDetail = () => {
                 onClick={() => {
                   course.is_enrolled
                     ? navigate(`/courses/${course.id}`)
-                    : handleEnroll(course.id);
+                    : navigate(`/courses/${course.id}/payment`);
                 }}
               >
                 {course.is_enrolled

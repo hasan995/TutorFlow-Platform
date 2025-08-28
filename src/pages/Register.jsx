@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { register } from "../api/api"; // ⬅️ from your api.js
 import { useNavigate } from "react-router-dom";
+import InterestsPopup from "../components/Interests";
 
 const RegisterPage = () => {
   const [role, setRole] = useState("student");
@@ -14,7 +15,9 @@ const RegisterPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // ⬅️ Added loading state
+  const [isLoading, setIsLoading] = useState(false);
+  const [showInterestsPopup, setShowInterestsPopup] = useState(false);
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -37,8 +40,9 @@ const RegisterPage = () => {
         confirm_password: confirmPassword,
         role,
       });
-      console.log("Register success:", data);
-      navigate("/login");
+      localStorage.setItem("accessToken", data.tokens.access);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      setShowInterestsPopup(true);
     } catch (err) {
       console.log("Register failed:", err.response?.data);
       setError("Registration failed. Please try again.");
@@ -237,6 +241,13 @@ const RegisterPage = () => {
         </div>
       </section>
       <Footer />
+      {showInterestsPopup && (
+        <InterestsPopup
+          onClose={() => {
+            window.location.href = "/";
+          }}
+        />
+      )}
     </>
   );
 };

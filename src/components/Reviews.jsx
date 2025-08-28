@@ -162,7 +162,7 @@ const CourseReviewsSection = ({ courseId }) => {
                 </div>
               ))
             ) : (
-              <p className="text-gray-500">
+              <p className="text-gray-500 text-center col-span-full">
                 No reviews yet. Be the first to review!
               </p>
             )}

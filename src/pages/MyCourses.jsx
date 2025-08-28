@@ -7,7 +7,15 @@ import {
   deleteCourse,
   withdrawFromCourse,
 } from "../api/api";
-import { Loader2, ArrowRight, BookOpen, ArrowRightCircle, Layers, User, BadgeCheck } from "lucide-react";
+import {
+  Loader2,
+  ArrowRight,
+  BookOpen,
+  ArrowRightCircle,
+  Layers,
+  User,
+  BadgeCheck,
+} from "lucide-react";
 
 const MyCourses = () => {
   const [enrollments, setEnrollments] = useState([]);
@@ -97,7 +105,9 @@ const MyCourses = () => {
                 >
                   <div className="relative">
                     <img
-                      src={course.image || "https://via.placeholder.com/400x200"}
+                      src={
+                        course.image || "https://via.placeholder.com/400x200"
+                      }
                       alt={course.title}
                       className="w-full h-44 object-cover group-hover:scale-[1.02] transition-transform duration-300"
                     />
@@ -146,7 +156,7 @@ const MyCourses = () => {
       )}
 
       {/* Enrolled Courses */}
-      
+
       {enrollments.length === 0 ? (
         <div className="text-center text-gray-600">
           <p className="mb-6">You are not enrolled in any courses yet.</p>
@@ -177,7 +187,7 @@ const MyCourses = () => {
               return (
                 <div
                   key={course.id}
-                  onClick={() => navigate(`/courses/${course.id}`)}
+                  onClick={() => navigate(`/course/${course.id}`)}
                   className="bg-white/80 backdrop-blur-md rounded-2xl shadow-md cursor-pointer hover:shadow-xl transition transform hover:-translate-y-1 border border-gray-100 overflow-hidden group"
                 >
                   <img
