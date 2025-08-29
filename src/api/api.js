@@ -98,6 +98,26 @@ export const login = async (data) => {
   return res.data;
 };
 
+// Password reset: request
+export const requestPasswordReset = async (email) => {
+  const res = await api.post("auth/password-reset/request/", { email });
+  return res.data;
+};
+
+// Password reset: confirm
+export const confirmPasswordReset = async ({
+  token,
+  new_password,
+  confirm_password,
+}) => {
+  const res = await api.post("auth/password-reset/confirm/", {
+    token,
+    new_password,
+    confirm_password,
+  });
+  return res.data;
+};
+
 // Logout
 export const logout = async (refreshToken) => {
   const res = await api.post("auth/logout/", { refresh_token: refreshToken });

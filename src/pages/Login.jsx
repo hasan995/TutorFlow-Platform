@@ -120,6 +120,14 @@ const LoginPage = () => {
             >
               {loading ? "Signing In..." : "Sign In"}
             </button>
+            <div className="text-right mt-2">
+              <a
+                href="/forgot-password"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Forgot your password?
+              </a>
+            </div>
           </form>
 
           {/* Divider */}
