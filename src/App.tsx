@@ -20,6 +20,9 @@ import GoogleAuthCallback from "./pages/GoogleAuthCallback";
 import PaymentPage from "./pages/PaymentPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import PendingApprovals from "./pages/admin/PendingApprovals";
+import RequireRole from "./components/RequireRole";
 import "./App.css"; // Assuming you have a global CSS file for styles
 
 function App() {
@@ -48,6 +51,23 @@ function App() {
           <Route path="/payment/:paymentId" element={<PaymentPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          {/* Admin */}
+          <Route
+            path="/admin"
+            element={
+              <RequireRole role="admin">
+                <AdminDashboard />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/admin/approvals"
+            element={
+              <RequireRole role="admin">
+                <PendingApprovals />
+              </RequireRole>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </NotificationProvider>

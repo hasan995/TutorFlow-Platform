@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getProfile, updateProfile } from "../api/api";
+import { getProfile, updateProfile, requestInstructor } from "../api/api";
 import { User, Mail, BadgeCheck, Upload } from "lucide-react";
 import InterestsPopup from "../components/Interests";
 
@@ -80,28 +80,11 @@ const ProfilePage = () => {
   const handleBecomeInstructor = async () => {
     try {
       setSaving(true);
-      const form = new FormData();
-      form.append("role", "instructor");
-      const result = await updateProfile(form);
-      const updatedUser =
-        result?.user || JSON.parse(localStorage.getItem("user") || "{}");
-      if (result?.user) {
-        localStorage.setItem("user", JSON.stringify(result.user));
-        setProfile(result.user);
-        setFormData(result.user);
-      } else if (updatedUser) {
-        updatedUser.role = "instructor";
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setProfile((prev) => ({ ...prev, role: "instructor" }));
-        setFormData((prev) => ({ ...prev, role: "instructor" }));
-      }
-
-      // Dispatch custom event to notify navbar and other components
-      window.dispatchEvent(new CustomEvent("userUpdated"));
-      navigate("/mycourses");
+      await requestInstructor("I would like to teach.");
+      alert("Request submitted. Admin will review it.");
     } catch (err) {
-      console.error("Failed to update role", err);
-      alert("Failed to update role. Please try again.");
+      console.error("Failed to request instructor", err);
+      alert("Failed to submit request.");
     } finally {
       setSaving(false);
     }
