@@ -21,6 +21,11 @@ const ProfilePage = () => {
   //   }
   // }, [showInterestsPopup]);
 
+  const handleImageError = (e) => {
+    e.target.onerror = null;
+    e.target.src = PLACEHOLDER_IMAGE;
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {

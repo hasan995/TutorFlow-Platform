@@ -17,6 +17,7 @@ const RegisterPage = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showInterestsPopup, setShowInterestsPopup] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const navigate = useNavigate();
 
