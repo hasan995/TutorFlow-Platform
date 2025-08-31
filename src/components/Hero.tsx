@@ -11,6 +11,26 @@ const Hero = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Seed from cache first for instant paint
+    try {
+      const cached = localStorage.getItem("hero_stats_cache");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (
+          typeof parsed?.totalStudents === "number" &&
+          typeof parsed?.totalCourses === "number" &&
+          typeof parsed?.successRatePct === "number"
+        ) {
+          setStats({
+            totalStudents: parsed.totalStudents,
+            totalCourses: parsed.totalCourses,
+            successRatePct: parsed.successRatePct,
+          });
+          setLoading(false);
+        }
+      }
+    } catch (_) {}
+
     const fetchStats = async () => {
       try {
         const data = await getCourses({ limit: 100, page: 1 });
@@ -32,9 +52,32 @@ const Hero = () => {
         });
         const avgRating = ratingCount > 0 ? ratingSum / ratingCount : 0;
         const successRatePct = Math.round((avgRating / 5) * 100);
-        setStats({ totalStudents, totalCourses, successRatePct });
+        const next = { totalStudents, totalCourses, successRatePct };
+
+        // Only update if changed
+        let different = true;
+        try {
+          const prevRaw = localStorage.getItem("hero_stats_cache");
+          if (prevRaw) {
+            const prev = JSON.parse(prevRaw);
+            different =
+              prev.totalStudents !== next.totalStudents ||
+              prev.totalCourses !== next.totalCourses ||
+              prev.successRatePct !== next.successRatePct;
+          }
+        } catch (_) {}
+
+        if (different) {
+          setStats(next);
+          try {
+            localStorage.setItem(
+              "hero_stats_cache",
+              JSON.stringify({ ...next, cachedAt: Date.now() })
+            );
+          } catch (_) {}
+        }
       } catch (e) {
-        // Keep graceful defaults on failure
+        // Ignore errors; keep cached values
       } finally {
         setLoading(false);
       }
