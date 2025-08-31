@@ -8,9 +8,18 @@ import {
   rejectInstructor,
   approveCourse,
   rejectCourse,
-} from "../../api/api";
+} from "../../api/api.js";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, UserPlus, BookOpen, Home, Library, Video } from "lucide-react";
+import {
+  Search,
+  UserPlus,
+  BookOpen,
+  Home,
+  Library,
+  Video,
+  Trash2,
+} from "lucide-react";
+import { deleteUser } from "../../api/api.js";
 import { useNotifications } from "../../contexts/NotificationContext";
 
 const Card: React.FC<{ title: string; value: number | string }> = ({
@@ -273,7 +282,16 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="p-8">Loading...</div>;
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-t-transparent border-b-transparent border-blue-600 animate-spin"></div>
+          <div className="absolute inset-2 rounded-full border-4 border-purple-500 border-l-transparent animate-[spin_1.2s_linear_infinite]"></div>
+        </div>
+      </div>
+    );
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
   const statusBadge = (status: string) => {
@@ -328,7 +346,6 @@ const AdminDashboard: React.FC = () => {
             >
               <Video className="h-4 w-4" /> Sessions
             </a>
-           
           </nav>
         </aside>
 
@@ -731,11 +748,12 @@ const AdminDashboard: React.FC = () => {
                           <th className="py-2">Email</th>
                           <th className="py-2">Enrolled Courses</th>
                           <th className="py-2">Status</th>
+                          <th className="py-2">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         <AnimatePresence>
-                          {filteredStudents.map((s) => (
+                          {filteredStudents.map((s: StudentUser) => (
                             <motion.tr
                               key={s.id}
                               layout
@@ -758,6 +776,31 @@ const AdminDashboard: React.FC = () => {
                               <td className="py-2">
                                 {s.status ||
                                   (s.is_active ? "Active" : "Inactive")}
+                              </td>
+                              <td className="py-2">
+                                <button
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50"
+                                  onClick={async () => {
+                                    if (
+                                      !confirm(
+                                        "Delete this user? This cannot be undone."
+                                      )
+                                    )
+                                      return;
+                                    const snapshot = [...students];
+                                    setStudents((prev) =>
+                                      prev.filter((u) => u.id !== s.id)
+                                    );
+                                    try {
+                                      await deleteUser(s.id as number);
+                                    } catch (e) {
+                                      // revert on failure
+                                      setStudents(snapshot as any);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" /> Delete
+                                </button>
                               </td>
                             </motion.tr>
                           ))}
@@ -802,11 +845,12 @@ const AdminDashboard: React.FC = () => {
                           <th className="py-2">Email</th>
                           <th className="py-2">Approved Courses</th>
                           <th className="py-2">Status</th>
+                          <th className="py-2">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         <AnimatePresence>
-                          {filteredInstructors.map((i) => (
+                          {filteredInstructors.map((i: InstructorUser) => (
                             <motion.tr
                               key={i.id}
                               layout
@@ -827,6 +871,31 @@ const AdminDashboard: React.FC = () => {
                                 {i.approved_courses_count ?? 0}
                               </td>
                               <td className="py-2">{i.status || "Approved"}</td>
+                              <td className="py-2">
+                                <button
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50"
+                                  onClick={async () => {
+                                    if (
+                                      !confirm(
+                                        "Delete this user? This cannot be undone."
+                                      )
+                                    )
+                                      return;
+                                    const snapshot = [...instructors];
+                                    setInstructors((prev) =>
+                                      prev.filter((u) => u.id !== i.id)
+                                    );
+                                    try {
+                                      await deleteUser(i.id as number);
+                                    } catch (e) {
+                                      // revert on failure
+                                      setInstructors(snapshot as any);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" /> Delete
+                                </button>
+                              </td>
                             </motion.tr>
                           ))}
                         </AnimatePresence>

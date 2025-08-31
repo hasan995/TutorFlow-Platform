@@ -242,6 +242,12 @@ export const listUsers = async (params = {}) => {
   return res.data;
 };
 
+// Admin: delete user by id
+export const deleteUser = async (userId) => {
+  const res = await api.delete(`auth/users/${userId}/delete/`);
+  return res.data;
+};
+
 // ========== ENROLLMENTS ENDPOINTS ==========
 
 // Enroll in a course
