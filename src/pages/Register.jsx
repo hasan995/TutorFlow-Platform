@@ -18,14 +18,49 @@ const RegisterPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showInterestsPopup, setShowInterestsPopup] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({
+    first_name: "",
+    last_name: "",
+    username: "",
+    email: "",
+    password: "",
+    confirm_password: "",
+    non_field: "",
+  });
+
+  // Password policy: 8+ chars, one upper, one lower, one number, one special char
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+  const passwordPolicyMessage =
+    "Password must be 8+ characters and include uppercase, lowercase, number, and special character.";
 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Reset field errors
+    setFieldErrors({
+      first_name: "",
+      last_name: "",
+      username: "",
+      email: "",
+      password: "",
+      confirm_password: "",
+      non_field: "",
+    });
+
+    // Client-side password policy validation
+    if (!passwordRegex.test(password)) {
+      setFieldErrors((e) => ({ ...e, password: passwordPolicyMessage }));
+      return;
+    }
+
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setFieldErrors((e) => ({
+        ...e,
+        confirm_password: "Passwords do not match",
+      }));
       return;
     }
 
@@ -45,8 +80,28 @@ const RegisterPage = () => {
       localStorage.setItem("user", JSON.stringify(data.user));
       setShowInterestsPopup(true);
     } catch (err) {
-      console.log("Register failed:", err.response?.data);
-      setError("Registration failed. Please try again.");
+      const data = err?.response?.data || {};
+      const next = {
+        first_name: "",
+        last_name: "",
+        username: "",
+        email: "",
+        password: "",
+        confirm_password: "",
+        non_field: "",
+      };
+      if (typeof data === "object") {
+        Object.entries(data).forEach(([k, v]) => {
+          const msg = Array.isArray(v) ? v.join(" ") : String(v);
+          if (k in next) next[k] = msg;
+          else if (k === "detail" || k === "non_field_errors")
+            next.non_field = msg;
+        });
+      } else {
+        next.non_field = "Registration failed. Please check your inputs.";
+      }
+      setFieldErrors(next);
+      setError("");
     } finally {
       setIsLoading(false); // ⬅️ End loading
     }
@@ -89,7 +144,7 @@ const RegisterPage = () => {
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
             Create Account
           </h2>
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             {/* First Name & Last Name */}
             <div className="flex gap-4">
               <div className="w-1/2">
@@ -108,6 +163,11 @@ const RegisterPage = () => {
                   />
                 </div>
               </div>
+              {fieldErrors.first_name && (
+                <p className="text-red-500 text-xs mt-1">
+                  {fieldErrors.first_name}
+                </p>
+              )}
               <div className="w-1/2">
                 <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
                   Last Name
@@ -124,6 +184,11 @@ const RegisterPage = () => {
                   />
                 </div>
               </div>
+              {fieldErrors.last_name && (
+                <p className="text-red-500 text-xs mt-1 w-1/2 ml-auto">
+                  {fieldErrors.last_name}
+                </p>
+              )}
             </div>
 
             {/* Username */}
@@ -142,6 +207,11 @@ const RegisterPage = () => {
                   required
                 />
               </div>
+              {fieldErrors.username && (
+                <p className="text-red-500 text-xs mt-1">
+                  {fieldErrors.username}
+                </p>
+              )}
             </div>
 
             {/* Role selection removed: all new users register as student by default */}
@@ -162,6 +232,9 @@ const RegisterPage = () => {
                   required
                 />
               </div>
+              {fieldErrors.email && (
+                <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -180,6 +253,16 @@ const RegisterPage = () => {
                   required
                 />
               </div>
+              {fieldErrors.password && (
+                <p className="text-red-500 text-xs mt-1">
+                  {fieldErrors.password}
+                </p>
+              )}
+              {!fieldErrors.password && (
+                <p className="text-gray-500 text-xs mt-1">
+                  {passwordPolicyMessage}
+                </p>
+              )}
             </div>
 
             {/* Confirm Password */}
@@ -198,10 +281,19 @@ const RegisterPage = () => {
                   required
                 />
               </div>
+              {fieldErrors.confirm_password && (
+                <p className="text-red-500 text-xs mt-1">
+                  {fieldErrors.confirm_password}
+                </p>
+              )}
             </div>
 
             {/* Error message */}
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {(error || fieldErrors.non_field) && (
+              <p className="text-red-500 text-sm">
+                {fieldErrors.non_field || error}
+              </p>
+            )}
 
             {/* Submit */}
             <button

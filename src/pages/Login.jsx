@@ -11,12 +11,18 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    email: "",
+    password: "",
+    non_field: "",
+  });
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setFieldErrors({ email: "", password: "", non_field: "" });
 
     try {
       // login expects data object
@@ -40,7 +46,18 @@ const LoginPage = () => {
       const role = data?.user?.role;
       window.location.href = role === "instructor" ? "/mycourses" : "/";
     } catch (err) {
-      setError(err.response?.data?.detail || "Invalid Credentials");
+      const data = err?.response?.data || {};
+      const next = { email: "", password: "", non_field: "" };
+      if (typeof data === "object") {
+        Object.entries(data).forEach(([k, v]) => {
+          const msg = Array.isArray(v) ? v.join(" ") : String(v);
+          if (k === "email" || k === "password") next[k] = msg;
+          else if (k === "detail" || k === "non_field_errors")
+            next.non_field = msg;
+        });
+      }
+      setFieldErrors(next);
+      setError(next.non_field || "Invalid Credentials");
     } finally {
       setLoading(false);
     }
@@ -80,7 +97,7 @@ const LoginPage = () => {
             Welcome Back
           </h2>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
@@ -97,6 +114,9 @@ const LoginPage = () => {
                   required
                 />
               </div>
+              {fieldErrors.email && (
+                <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -115,11 +135,18 @@ const LoginPage = () => {
                   required
                 />
               </div>
+              {fieldErrors.password && (
+                <p className="text-red-500 text-xs mt-1">
+                  {fieldErrors.password}
+                </p>
+              )}
             </div>
 
             {/* Error Message */}
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
+            {(error || fieldErrors.non_field) && (
+              <p className="text-red-500 text-sm text-center">
+                {fieldErrors.non_field || error}
+              </p>
             )}
 
             {/* Submit */}
