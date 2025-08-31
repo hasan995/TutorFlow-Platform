@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import InterestsPopup from "../components/Interests";
 
 const RegisterPage = () => {
-  const [role, setRole] = useState("student");
+  const [role] = useState("student");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -16,6 +16,7 @@ const RegisterPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showInterestsPopup, setShowInterestsPopup] = useState(false);
 
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ const RegisterPage = () => {
       setGoogleLoading(true);
       setError("");
       // Persist chosen role across OAuth redirect
-      sessionStorage.setItem("oauth_role", role);
+      sessionStorage.setItem("oauth_role", "student");
       const redirectUri = `${window.location.origin}/auth/callback`;
       const response = await getGoogleAuthUrl(redirectUri);
       window.location.href = response.auth_url;
@@ -143,40 +144,7 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* Role */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Role
-              </label>
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => setRole("student")}
-                  className={`flex-1 py-2 rounded-lg border font-medium transition-colors
-                    ${
-                      role === "student"
-                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-blue-600 shadow"
-                        : "bg-gray-100 text-gray-700 border-gray-300 hover:border-blue-400"
-                    }
-                  `}
-                >
-                  Student
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole("instructor")}
-                  className={`flex-1 py-2 rounded-lg border font-medium transition-colors
-                    ${
-                      role === "instructor"
-                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-purple-600 shadow"
-                        : "bg-gray-100 text-gray-700 border-gray-300 hover:border-purple-400"
-                    }
-                  `}
-                >
-                  Instructor
-                </button>
-              </div>
-            </div>
+            {/* Role selection removed: all new users register as student by default */}
 
             {/* Email */}
             <div>
