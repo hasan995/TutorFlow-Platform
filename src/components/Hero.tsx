@@ -1,7 +1,47 @@
-import React from "react";
-import { ArrowRight, Play, Star, Users, BookOpen, Award } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Star, Users, BookOpen, Award } from "lucide-react";
+import { getCourses } from "../api/api";
 
 const Hero = () => {
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    totalCourses: 0,
+    successRatePct: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await getCourses({ limit: 100, page: 1 });
+        const results = Array.isArray(data?.results)
+          ? data.results
+          : data || [];
+        const totalCourses = Number(data?.count) || results.length;
+        let totalStudents = 0;
+        let ratingSum = 0;
+        let ratingCount = 0;
+        results.forEach((c: any) => {
+          if (typeof c?.enrollments_count === "number") {
+            totalStudents += c.enrollments_count;
+          }
+          if (typeof c?.average_rating === "number") {
+            ratingSum += c.average_rating;
+            ratingCount += 1;
+          }
+        });
+        const avgRating = ratingCount > 0 ? ratingSum / ratingCount : 0;
+        const successRatePct = Math.round((avgRating / 5) * 100);
+        setStats({ totalStudents, totalCourses, successRatePct });
+      } catch (e) {
+        // Keep graceful defaults on failure
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <section className="pt-20 pb-16 bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -11,7 +51,9 @@ const Hero = () => {
             <div className="space-y-6">
               <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full text-sm font-medium text-blue-700">
                 <Star className="h-4 w-4 mr-2 text-yellow-500 fill-current" />
-                Trusted by 50,000+ Students
+                {loading
+                  ? "Loading..."
+                  : `Trusted by ${stats.totalStudents.toLocaleString()} Students`}
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
@@ -50,21 +92,29 @@ const Hero = () => {
               <div className="text-center">
                 <div className="flex items-center justify-center mb-2">
                   <Users className="h-6 w-6 text-blue-600 mr-2" />
-                  <span className="text-2xl font-bold text-gray-900">50K+</span>
+                  <span className="text-2xl font-bold text-gray-900">
+                    {loading ? "—" : stats.totalStudents.toLocaleString()}
+                  </span>
                 </div>
                 <p className="text-sm text-gray-600">Active Students</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center mb-2">
                   <BookOpen className="h-6 w-6 text-purple-600 mr-2" />
-                  <span className="text-2xl font-bold text-gray-900">200+</span>
+                  <span className="text-2xl font-bold text-gray-900">
+                    {loading ? "—" : stats.totalCourses}
+                  </span>
                 </div>
                 <p className="text-sm text-gray-600">Expert Courses</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center mb-2">
                   <Award className="h-6 w-6 text-green-600 mr-2" />
-                  <span className="text-2xl font-bold text-gray-900">95%</span>
+                  <span className="text-2xl font-bold text-gray-900">
+                    {loading
+                      ? "—"
+                      : `${Math.min(100, Math.max(0, stats.successRatePct))}%`}
+                  </span>
                 </div>
                 <p className="text-sm text-gray-600">Success Rate</p>
               </div>
