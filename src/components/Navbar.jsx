@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Menu,
@@ -18,10 +18,13 @@ import {
 import NotificationBell from "./NotificationBell";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
+  const userMenuRef = useRef(null);
+  const navRef = useRef(null);
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
@@ -102,6 +105,40 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close menus on click outside or Escape
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        isUserMenuOpen &&
+        userMenuRef.current &&
+        !userMenuRef.current.contains(e.target)
+      ) {
+        setIsUserMenuOpen(false);
+      }
+      if (
+        isMobileMenuOpen &&
+        navRef.current &&
+        !navRef.current.contains(e.target)
+      ) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    const handleKey = (e) => {
+      if (e.key === "Escape") {
+        setIsUserMenuOpen(false);
+        setIsMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [isUserMenuOpen, isMobileMenuOpen]);
+
   return (
     <>
       {/* NAVBAR */}
@@ -111,6 +148,7 @@ const Navbar = () => {
             ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200"
             : "bg-white"
         }`}
+        ref={navRef}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -146,16 +184,16 @@ const Navbar = () => {
                   <NotificationBell />
 
                   {/* User Menu */}
-                  <div className="relative">
+                  <div className="relative" ref={userMenuRef}>
                     <button
-                      onClick={() => setIsMenuOpen(!isMenuOpen)}
+                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                       className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
                     >
                       <User className="h-5 w-5" />
                       <span className="hidden sm:block">{displayName}</span>
                     </button>
 
-                    {isMenuOpen && (
+                    {isUserMenuOpen && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
                         <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-100">
                           {role === "admin"
@@ -167,17 +205,22 @@ const Navbar = () => {
                         <a
                           href="/profile"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => setIsUserMenuOpen(false)}
                         >
                           Profile
                         </a>
                         <a
                           href="/mycourses"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => setIsUserMenuOpen(false)}
                         >
                           My Courses
                         </a>
                         <button
-                          onClick={() => setShowLogoutConfirm(true)}
+                          onClick={() => {
+                            setIsUserMenuOpen(false);
+                            setShowLogoutConfirm(true);
+                          }}
                           className="block w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
                         >
                           Logout
@@ -205,10 +248,10 @@ const Navbar = () => {
 
               {/* Mobile Menu Button */}
               <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="md:hidden p-2 text-gray-700 hover:text-blue-600"
               >
-                {isMenuOpen ? (
+                {isMobileMenuOpen ? (
                   <X className="h-6 w-6" />
                 ) : (
                   <Menu className="h-6 w-6" />
@@ -219,7 +262,7 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Navigation */}
-        {isMenuOpen && (
+        {isMobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-200">
             <div className="px-4 py-2 space-y-1">
               {navLinks.map((link) => (
@@ -227,6 +270,7 @@ const Navbar = () => {
                   key={link.name}
                   href={link.href}
                   className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.icon}
                   <span>{link.name}</span>
