@@ -51,6 +51,13 @@ const ProfilePage = () => {
     }
   };
 
+  const handleImageError = (e) => {
+    try {
+      e.target.onerror = null;
+      e.target.src = PLACEHOLDER_IMAGE;
+    } catch (_) {}
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);

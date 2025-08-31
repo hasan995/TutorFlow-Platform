@@ -225,6 +225,12 @@ export const getUserRecommendation = async () => {
   return res.data;
 };
 
+// ========== ADMIN USERS ==========
+export const listUsers = async (params = {}) => {
+  const res = await api.get("auth/users/", { params });
+  return res.data;
+};
+
 // ========== ENROLLMENTS ENDPOINTS ==========
 
 // Enroll in a course
