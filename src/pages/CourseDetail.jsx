@@ -126,6 +126,11 @@ const CourseDetail = () => {
               <button
                 className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
                 onClick={() => {
+                  const token = localStorage.getItem("accessToken");
+                  if (!token) {
+                    navigate("/login");
+                    return;
+                  }
                   course.is_enrolled
                     ? navigate(`/courses/${course.id}`)
                     : navigate(`/courses/${course.id}/payment`);
