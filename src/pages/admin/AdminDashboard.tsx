@@ -10,7 +10,7 @@ import {
   rejectCourse,
 } from "../../api/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, UserPlus, BookOpen } from "lucide-react";
+import { Search, UserPlus, BookOpen, Home, Library, Video } from "lucide-react";
 import { useNotifications } from "../../contexts/NotificationContext";
 
 const Card: React.FC<{ title: string; value: number | string }> = ({
@@ -300,497 +300,542 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      <div className="max-w-7xl mx-auto p-6 md:flex md:gap-6">
+        {/* Sidebar navigation to other routes */}
+        <aside className="md:w-64 shrink-0 mb-6 md:mb-0">
+          <nav className="sticky top-20 bg-white rounded-xl shadow p-4 space-y-1">
+            <a
+              href="/admin"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              <Home className="h-4 w-4" /> Dashboard
+            </a>
+            <a
+              href="/"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              <Home className="h-4 w-4" /> Home
+            </a>
+            <a
+              href="/courses"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              <Library className="h-4 w-4" /> Courses
+            </a>
+            <a
+              href="/sessions"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              <Video className="h-4 w-4" /> Sessions
+            </a>
+           
+          </nav>
+        </aside>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card title="Users" value={summary?.totals?.users || 0} />
-          <Card title="Instructors" value={summary?.totals?.instructors || 0} />
-          <Card title="Courses" value={summary?.totals?.courses || 0} />
-          <Card
-            title="Pending Requests"
-            value={
-              (summary?.pending?.instructor_requests || 0) +
-              (summary?.pending?.courses || 0)
-            }
-          />
-        </div>
+        {/* Main content */}
+        <div className="flex-1 space-y-6">
+          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
 
-        <div className="rounded-xl bg-white shadow">
-          <div className="border-b px-4">
-            <div className="flex gap-4">
-              {[
-                { key: "pending", label: "Pending Approvals" },
-                { key: "students", label: "All Students" },
-                { key: "instructors", label: "All Instructors" },
-              ].map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key as TabKey)}
-                  className={`relative py-3 px-4 -mb-px font-medium ${
-                    activeTab === t.key
-                      ? "text-blue-600"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  {t.label}
-                  {activeTab === t.key && (
-                    <motion.div
-                      layoutId="tab-underline"
-                      className="absolute left-0 right-0 -bottom-px h-0.5 bg-blue-600"
-                    />
-                  )}
-                </button>
-              ))}
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card title="Users" value={summary?.totals?.users || 0} />
+            <Card
+              title="Instructors"
+              value={summary?.totals?.instructors || 0}
+            />
+            <Card title="Courses" value={summary?.totals?.courses || 0} />
+            <Card
+              title="Pending Requests"
+              value={
+                (summary?.pending?.instructor_requests || 0) +
+                (summary?.pending?.courses || 0)
+              }
+            />
           </div>
 
-          <div className="p-6">
-            <AnimatePresence mode="wait">
-              {activeTab === "pending" && (
-                <motion.div
-                  key="pending"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                >
-                  <div className="mb-4 border-b px-1">
-                    <div className="flex gap-4">
-                      {[
-                        { key: "instructors", label: "Instructor Requests" },
-                        { key: "rejected", label: "Rejected Instructors" },
-                        { key: "courses", label: "Course Requests" },
-                      ].map((t) => (
-                        <button
-                          key={t.key}
-                          onClick={() => setPendingTab(t.key as any)}
-                          className={`relative py-2 px-3 -mb-px text-sm font-medium ${
-                            pendingTab === t.key
-                              ? "text-blue-600"
-                              : "text-gray-600 hover:text-gray-900"
-                          }`}
-                        >
-                          {t.label}
-                          {pendingTab === t.key && (
-                            <motion.div
-                              layoutId="pending-underline"
-                              className="absolute left-0 right-0 -bottom-px h-0.5 bg-blue-600"
-                            />
-                          )}
-                        </button>
-                      ))}
+          <div className="rounded-xl bg-white shadow">
+            <div className="border-b px-4">
+              <div className="flex gap-4">
+                {[
+                  { key: "pending", label: "Pending Approvals" },
+                  { key: "students", label: "All Students" },
+                  { key: "instructors", label: "All Instructors" },
+                ].map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setActiveTab(t.key as TabKey)}
+                    className={`relative py-3 px-4 -mb-px font-medium ${
+                      activeTab === t.key
+                        ? "text-blue-600"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    {t.label}
+                    {activeTab === t.key && (
+                      <motion.div
+                        layoutId="tab-underline"
+                        className="absolute left-0 right-0 -bottom-px h-0.5 bg-blue-600"
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-6">
+              <AnimatePresence mode="wait">
+                {activeTab === "pending" && (
+                  <motion.div
+                    key="pending"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    <div className="mb-4 border-b px-1">
+                      <div className="flex gap-4">
+                        {[
+                          { key: "instructors", label: "Instructor Requests" },
+                          { key: "rejected", label: "Rejected Instructors" },
+                          { key: "courses", label: "Course Requests" },
+                        ].map((t) => (
+                          <button
+                            key={t.key}
+                            onClick={() => setPendingTab(t.key as any)}
+                            className={`relative py-2 px-3 -mb-px text-sm font-medium ${
+                              pendingTab === t.key
+                                ? "text-blue-600"
+                                : "text-gray-600 hover:text-gray-900"
+                            }`}
+                          >
+                            {t.label}
+                            {pendingTab === t.key && (
+                              <motion.div
+                                layoutId="pending-underline"
+                                className="absolute left-0 right-0 -bottom-px h-0.5 bg-blue-600"
+                              />
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div className="grid lg:grid-cols-1 gap-6">
-                    {pendingTab === "instructors" && (
-                      <div className="bg-white rounded-xl shadow p-4 md:p-6">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center shadow-sm">
-                              <UserPlus className="h-5 w-5" />
+                    <div className="grid lg:grid-cols-1 gap-6">
+                      {pendingTab === "instructors" && (
+                        <div className="bg-white rounded-xl shadow p-4 md:p-6">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center shadow-sm">
+                                <UserPlus className="h-5 w-5" />
+                              </div>
+                              <div>
+                                <h2 className="text-base md:text-lg font-semibold leading-tight">
+                                  Instructor Requests
+                                </h2>
+                                <p className="text-xs text-gray-500">
+                                  {filteredPendingInstructorRequests.length}{" "}
+                                  pending
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <h2 className="text-base md:text-lg font-semibold leading-tight">
-                                Instructor Requests
-                              </h2>
-                              <p className="text-xs text-gray-500">
-                                {filteredPendingInstructorRequests.length}{" "}
-                                pending
-                              </p>
+                            <div className="relative w-full max-w-xs">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              <input
+                                value={instructorReqSearch}
+                                onChange={(e) =>
+                                  setInstructorReqSearch(e.target.value)
+                                }
+                                placeholder="Search by user or email"
+                                className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none"
+                              />
                             </div>
                           </div>
-                          <div className="relative w-full max-w-xs">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                              value={instructorReqSearch}
-                              onChange={(e) =>
-                                setInstructorReqSearch(e.target.value)
-                              }
-                              placeholder="Search by user or email"
-                              className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none"
-                            />
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left table-fixed">
+                              <colgroup>
+                                <col className="w-[20%]" />
+                                <col className="w-[28%]" />
+                                <col className="w-[36%]" />
+                                <col className="w-[16%]" />
+                              </colgroup>
+                              <thead>
+                                <tr className="text-gray-600 text-sm">
+                                  <th className="py-2">User</th>
+                                  <th className="py-2">Email</th>
+                                  <th className="py-2">Motivation</th>
+                                  <th className="py-2">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <AnimatePresence>
+                                  {filteredPendingInstructorRequests.map(
+                                    (r) => (
+                                      <motion.tr
+                                        key={r.id}
+                                        layout
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0 }}
+                                        className="border-t hover:bg-gray-50 transition-colors"
+                                      >
+                                        <td className="py-2 pr-3 whitespace-nowrap">
+                                          {r.name || r.user_id}
+                                        </td>
+                                        <td className="py-2 pr-3 whitespace-nowrap">
+                                          {r.email}
+                                        </td>
+                                        <td
+                                          className="py-2 pr-3 truncate"
+                                          title={r.motivation}
+                                        >
+                                          {r.motivation}
+                                        </td>
+                                        <td className="py-2">
+                                          <div className="flex gap-2">
+                                            <button
+                                              className={btnApprove}
+                                              onClick={() =>
+                                                approveInstructorRow(r.id)
+                                              }
+                                            >
+                                              Approve
+                                            </button>
+                                            <button
+                                              className={btnReject}
+                                              onClick={() =>
+                                                rejectInstructorRow(r.id)
+                                              }
+                                            >
+                                              Reject
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </motion.tr>
+                                    )
+                                  )}
+                                </AnimatePresence>
+                              </tbody>
+                            </table>
                           </div>
                         </div>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left table-fixed">
-                            <colgroup>
-                              <col className="w-[20%]" />
-                              <col className="w-[28%]" />
-                              <col className="w-[36%]" />
-                              <col className="w-[16%]" />
-                            </colgroup>
-                            <thead>
-                              <tr className="text-gray-600 text-sm">
-                                <th className="py-2">User</th>
-                                <th className="py-2">Email</th>
-                                <th className="py-2">Motivation</th>
-                                <th className="py-2">Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <AnimatePresence>
-                                {filteredPendingInstructorRequests.map((r) => (
-                                  <motion.tr
-                                    key={r.id}
-                                    layout
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0 }}
-                                    className="border-t hover:bg-gray-50 transition-colors"
-                                  >
-                                    <td className="py-2 pr-3 whitespace-nowrap">
-                                      {r.name || r.user_id}
-                                    </td>
-                                    <td className="py-2 pr-3 whitespace-nowrap">
-                                      {r.email}
-                                    </td>
-                                    <td
-                                      className="py-2 pr-3 truncate"
-                                      title={r.motivation}
+                      )}
+
+                      {pendingTab === "rejected" && (
+                        <div className="bg-white rounded-xl shadow p-4 md:p-6">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center shadow-sm">
+                                <UserPlus className="h-5 w-5" />
+                              </div>
+                              <div>
+                                <h2 className="text-base md:text-lg font-semibold leading-tight">
+                                  Rejected Instructors
+                                </h2>
+                                <p className="text-xs text-gray-500">
+                                  {filteredRejectedInstructorRequests.length}{" "}
+                                  rejected
+                                </p>
+                              </div>
+                            </div>
+                            <div className="relative w-full max-w-xs">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              <input
+                                value={instructorReqSearch}
+                                onChange={(e) =>
+                                  setInstructorReqSearch(e.target.value)
+                                }
+                                placeholder="Search by user or email"
+                                className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left table-fixed">
+                              <colgroup>
+                                <col className="w-[20%]" />
+                                <col className="w-[28%]" />
+                                <col className="w-[36%]" />
+                                <col className="w-[16%]" />
+                              </colgroup>
+                              <thead>
+                                <tr className="text-gray-600 text-sm">
+                                  <th className="py-2">User</th>
+                                  <th className="py-2">Email</th>
+                                  <th className="py-2">Motivation</th>
+                                  <th className="py-2">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <AnimatePresence>
+                                  {filteredRejectedInstructorRequests.map(
+                                    (r) => (
+                                      <motion.tr
+                                        key={r.id}
+                                        layout
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0 }}
+                                        className="border-t hover:bg-gray-50 transition-colors"
+                                      >
+                                        <td className="py-2 pr-3 whitespace-nowrap">
+                                          {r.name || r.user_id}
+                                        </td>
+                                        <td className="py-2 pr-3 whitespace-nowrap">
+                                          {r.email}
+                                        </td>
+                                        <td
+                                          className="py-2 pr-3 truncate"
+                                          title={r.motivation}
+                                        >
+                                          {r.motivation}
+                                        </td>
+                                        <td className="py-2">
+                                          {statusBadge(
+                                            (r as InstructorRequest).status
+                                          )}
+                                        </td>
+                                      </motion.tr>
+                                    )
+                                  )}
+                                </AnimatePresence>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {pendingTab === "courses" && (
+                        <div className="bg-white rounded-xl shadow p-4 md:p-6">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-md bg-sky-100 text-sky-600 flex items-center justify-center shadow-sm">
+                                <BookOpen className="h-5 w-5" />
+                              </div>
+                              <div>
+                                <h2 className="text-base md:text-lg font-semibold leading-tight">
+                                  Course Requests
+                                </h2>
+                                <p className="text-xs text-gray-500">
+                                  {pendingCourses.length} pending
+                                </p>
+                              </div>
+                            </div>
+                            <div className="relative w-full max-w-xs">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              <input
+                                value={courseReqSearch}
+                                onChange={(e) =>
+                                  setCourseReqSearch(e.target.value)
+                                }
+                                placeholder="Search by title or instructor"
+                                className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left table-fixed">
+                              <colgroup>
+                                <col className="w-[36%]" />
+                                <col className="w-[28%]" />
+                                <col className="w-[16%]" />
+                                <col className="w-[20%]" />
+                              </colgroup>
+                              <thead>
+                                <tr className="text-gray-600 text-sm">
+                                  <th className="py-2">Title</th>
+                                  <th className="py-2">Instructor</th>
+                                  <th className="py-2">Status</th>
+                                  <th className="py-2">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <AnimatePresence>
+                                  {filteredCourseRequests.map((c) => (
+                                    <motion.tr
+                                      key={c.id}
+                                      layout
+                                      initial={{ opacity: 0, y: 8 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0 }}
+                                      className="border-t hover:bg-gray-50 transition-colors"
                                     >
-                                      {r.motivation}
-                                    </td>
-                                    <td className="py-2">
-                                      <div className="flex gap-2">
-                                        <button
-                                          className={btnApprove}
-                                          onClick={() =>
-                                            approveInstructorRow(r.id)
-                                          }
-                                        >
-                                          Approve
-                                        </button>
-                                        <button
-                                          className={btnReject}
-                                          onClick={() =>
-                                            rejectInstructorRow(r.id)
-                                          }
-                                        >
-                                          Reject
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </motion.tr>
-                                ))}
-                              </AnimatePresence>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-
-                    {pendingTab === "rejected" && (
-                      <div className="bg-white rounded-xl shadow p-4 md:p-6">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center shadow-sm">
-                              <UserPlus className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <h2 className="text-base md:text-lg font-semibold leading-tight">
-                                Rejected Instructors
-                              </h2>
-                              <p className="text-xs text-gray-500">
-                                {filteredRejectedInstructorRequests.length}{" "}
-                                rejected
-                              </p>
-                            </div>
-                          </div>
-                          <div className="relative w-full max-w-xs">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                              value={instructorReqSearch}
-                              onChange={(e) =>
-                                setInstructorReqSearch(e.target.value)
-                              }
-                              placeholder="Search by user or email"
-                              className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none"
-                            />
+                                      <td className="py-2">{c.title}</td>
+                                      <td className="py-2">
+                                        {c.instructor_profile?.username ||
+                                          c.instructor}
+                                      </td>
+                                      <td className="py-2">
+                                        {statusBadge(c.status)}
+                                      </td>
+                                      <td className="py-2">
+                                        <div className="flex gap-2">
+                                          <button
+                                            className={btnApprove}
+                                            onClick={() =>
+                                              approveCourseRow(c.id)
+                                            }
+                                          >
+                                            Approve
+                                          </button>
+                                          <button
+                                            className={btnReject}
+                                            onClick={() =>
+                                              rejectCourseRow(c.id)
+                                            }
+                                          >
+                                            Reject
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </motion.tr>
+                                  ))}
+                                </AnimatePresence>
+                              </tbody>
+                            </table>
                           </div>
                         </div>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left table-fixed">
-                            <colgroup>
-                              <col className="w-[20%]" />
-                              <col className="w-[28%]" />
-                              <col className="w-[36%]" />
-                              <col className="w-[16%]" />
-                            </colgroup>
-                            <thead>
-                              <tr className="text-gray-600 text-sm">
-                                <th className="py-2">User</th>
-                                <th className="py-2">Email</th>
-                                <th className="py-2">Motivation</th>
-                                <th className="py-2">Status</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <AnimatePresence>
-                                {filteredRejectedInstructorRequests.map((r) => (
-                                  <motion.tr
-                                    key={r.id}
-                                    layout
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0 }}
-                                    className="border-t hover:bg-gray-50 transition-colors"
-                                  >
-                                    <td className="py-2 pr-3 whitespace-nowrap">
-                                      {r.name || r.user_id}
-                                    </td>
-                                    <td className="py-2 pr-3 whitespace-nowrap">
-                                      {r.email}
-                                    </td>
-                                    <td
-                                      className="py-2 pr-3 truncate"
-                                      title={r.motivation}
-                                    >
-                                      {r.motivation}
-                                    </td>
-                                    <td className="py-2">
-                                      {statusBadge(
-                                        (r as InstructorRequest).status
-                                      )}
-                                    </td>
-                                  </motion.tr>
-                                ))}
-                              </AnimatePresence>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+                  </motion.div>
+                )}
 
-                    {pendingTab === "courses" && (
-                      <div className="bg-white rounded-xl shadow p-4 md:p-6">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-md bg-sky-100 text-sky-600 flex items-center justify-center shadow-sm">
-                              <BookOpen className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <h2 className="text-base md:text-lg font-semibold leading-tight">
-                                Course Requests
-                              </h2>
-                              <p className="text-xs text-gray-500">
-                                {pendingCourses.length} pending
-                              </p>
-                            </div>
-                          </div>
-                          <div className="relative w-full max-w-xs">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                              value={courseReqSearch}
-                              onChange={(e) =>
-                                setCourseReqSearch(e.target.value)
-                              }
-                              placeholder="Search by title or instructor"
-                              className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none"
-                            />
-                          </div>
-                        </div>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left table-fixed">
-                            <colgroup>
-                              <col className="w-[36%]" />
-                              <col className="w-[28%]" />
-                              <col className="w-[16%]" />
-                              <col className="w-[20%]" />
-                            </colgroup>
-                            <thead>
-                              <tr className="text-gray-600 text-sm">
-                                <th className="py-2">Title</th>
-                                <th className="py-2">Instructor</th>
-                                <th className="py-2">Status</th>
-                                <th className="py-2">Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <AnimatePresence>
-                                {filteredCourseRequests.map((c) => (
-                                  <motion.tr
-                                    key={c.id}
-                                    layout
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0 }}
-                                    className="border-t hover:bg-gray-50 transition-colors"
-                                  >
-                                    <td className="py-2">{c.title}</td>
-                                    <td className="py-2">
-                                      {c.instructor_profile?.username ||
-                                        c.instructor}
-                                    </td>
-                                    <td className="py-2">
-                                      {statusBadge(c.status)}
-                                    </td>
-                                    <td className="py-2">
-                                      <div className="flex gap-2">
-                                        <button
-                                          className={btnApprove}
-                                          onClick={() => approveCourseRow(c.id)}
-                                        >
-                                          Approve
-                                        </button>
-                                        <button
-                                          className={btnReject}
-                                          onClick={() => rejectCourseRow(c.id)}
-                                        >
-                                          Reject
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </motion.tr>
-                                ))}
-                              </AnimatePresence>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
+                {activeTab === "students" && (
+                  <motion.div
+                    key="students"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
+                      <input
+                        value={studentSearch}
+                        onChange={(e) => setStudentSearch(e.target.value)}
+                        placeholder="Search by name or email"
+                        className="w-full md:w-80 px-3 py-2 border rounded"
+                      />
+                      <select
+                        value={studentStatus}
+                        onChange={(e) =>
+                          setStudentStatus(
+                            e.target.value as "All" | "Active" | "Inactive"
+                          )
+                        }
+                        className="px-3 py-2 border rounded w-full md:w-48"
+                      >
+                        <option>All</option>
+                        <option>Active</option>
+                        <option>Inactive</option>
+                      </select>
+                    </div>
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="text-gray-600 text-sm">
+                          <th className="py-2">Name</th>
+                          <th className="py-2">Email</th>
+                          <th className="py-2">Enrolled Courses</th>
+                          <th className="py-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <AnimatePresence>
+                          {filteredStudents.map((s) => (
+                            <motion.tr
+                              key={s.id}
+                              layout
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0 }}
+                              className="border-t"
+                            >
+                              <td className="py-2">
+                                {`${s.first_name || ""} ${
+                                  s.last_name || ""
+                                }`.trim() ||
+                                  s.username ||
+                                  s.email}
+                              </td>
+                              <td className="py-2">{s.email}</td>
+                              <td className="py-2">
+                                {s.enrolled_courses_count ?? 0}
+                              </td>
+                              <td className="py-2">
+                                {s.status ||
+                                  (s.is_active ? "Active" : "Inactive")}
+                              </td>
+                            </motion.tr>
+                          ))}
+                        </AnimatePresence>
+                      </tbody>
+                    </table>
+                  </motion.div>
+                )}
 
-              {activeTab === "students" && (
-                <motion.div
-                  key="students"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                >
-                  <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
-                    <input
-                      value={studentSearch}
-                      onChange={(e) => setStudentSearch(e.target.value)}
-                      placeholder="Search by name or email"
-                      className="w-full md:w-80 px-3 py-2 border rounded"
-                    />
-                    <select
-                      value={studentStatus}
-                      onChange={(e) =>
-                        setStudentStatus(
-                          e.target.value as "All" | "Active" | "Inactive"
-                        )
-                      }
-                      className="px-3 py-2 border rounded w-full md:w-48"
-                    >
-                      <option>All</option>
-                      <option>Active</option>
-                      <option>Inactive</option>
-                    </select>
-                  </div>
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="text-gray-600 text-sm">
-                        <th className="py-2">Name</th>
-                        <th className="py-2">Email</th>
-                        <th className="py-2">Enrolled Courses</th>
-                        <th className="py-2">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <AnimatePresence>
-                        {filteredStudents.map((s) => (
-                          <motion.tr
-                            key={s.id}
-                            layout
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                            className="border-t"
-                          >
-                            <td className="py-2">
-                              {`${s.first_name || ""} ${
-                                s.last_name || ""
-                              }`.trim() ||
-                                s.username ||
-                                s.email}
-                            </td>
-                            <td className="py-2">{s.email}</td>
-                            <td className="py-2">
-                              {s.enrolled_courses_count ?? 0}
-                            </td>
-                            <td className="py-2">
-                              {s.status ||
-                                (s.is_active ? "Active" : "Inactive")}
-                            </td>
-                          </motion.tr>
-                        ))}
-                      </AnimatePresence>
-                    </tbody>
-                  </table>
-                </motion.div>
-              )}
-
-              {activeTab === "instructors" && (
-                <motion.div
-                  key="instructors"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                >
-                  <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
-                    <input
-                      value={instructorSearch}
-                      onChange={(e) => setInstructorSearch(e.target.value)}
-                      placeholder="Search by name or email"
-                      className="w-full md:w-80 px-3 py-2 border rounded"
-                    />
-                    <select
-                      value={instructorStatus}
-                      onChange={(e) =>
-                        setInstructorStatus(
-                          e.target.value as "All" | "Approved" | "Pending"
-                        )
-                      }
-                      className="px-3 py-2 border rounded w-full md:w-48"
-                    >
-                      <option>All</option>
-                      <option>Approved</option>
-                      <option>Pending</option>
-                    </select>
-                  </div>
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="text-gray-600 text-sm">
-                        <th className="py-2">Name</th>
-                        <th className="py-2">Email</th>
-                        <th className="py-2">Approved Courses</th>
-                        <th className="py-2">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <AnimatePresence>
-                        {filteredInstructors.map((i) => (
-                          <motion.tr
-                            key={i.id}
-                            layout
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                            className="border-t"
-                          >
-                            <td className="py-2">
-                              {`${i.first_name || ""} ${
-                                i.last_name || ""
-                              }`.trim() ||
-                                i.username ||
-                                i.email}
-                            </td>
-                            <td className="py-2">{i.email}</td>
-                            <td className="py-2">
-                              {i.approved_courses_count ?? 0}
-                            </td>
-                            <td className="py-2">{i.status || "Approved"}</td>
-                          </motion.tr>
-                        ))}
-                      </AnimatePresence>
-                    </tbody>
-                  </table>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                {activeTab === "instructors" && (
+                  <motion.div
+                    key="instructors"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
+                      <input
+                        value={instructorSearch}
+                        onChange={(e) => setInstructorSearch(e.target.value)}
+                        placeholder="Search by name or email"
+                        className="w-full md:w-80 px-3 py-2 border rounded"
+                      />
+                      <select
+                        value={instructorStatus}
+                        onChange={(e) =>
+                          setInstructorStatus(
+                            e.target.value as "All" | "Approved" | "Pending"
+                          )
+                        }
+                        className="px-3 py-2 border rounded w-full md:w-48"
+                      >
+                        <option>All</option>
+                        <option>Approved</option>
+                        <option>Pending</option>
+                      </select>
+                    </div>
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="text-gray-600 text-sm">
+                          <th className="py-2">Name</th>
+                          <th className="py-2">Email</th>
+                          <th className="py-2">Approved Courses</th>
+                          <th className="py-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <AnimatePresence>
+                          {filteredInstructors.map((i) => (
+                            <motion.tr
+                              key={i.id}
+                              layout
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0 }}
+                              className="border-t"
+                            >
+                              <td className="py-2">
+                                {`${i.first_name || ""} ${
+                                  i.last_name || ""
+                                }`.trim() ||
+                                  i.username ||
+                                  i.email}
+                              </td>
+                              <td className="py-2">{i.email}</td>
+                              <td className="py-2">
+                                {i.approved_courses_count ?? 0}
+                              </td>
+                              <td className="py-2">{i.status || "Approved"}</td>
+                            </motion.tr>
+                          ))}
+                        </AnimatePresence>
+                      </tbody>
+                    </table>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
