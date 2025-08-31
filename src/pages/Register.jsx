@@ -93,7 +93,7 @@ const RegisterPage = () => {
             {/* First Name & Last Name */}
             <div className="flex gap-4">
               <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
                   First Name
                 </label>
                 <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2">
@@ -109,7 +109,7 @@ const RegisterPage = () => {
                 </div>
               </div>
               <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
                   Last Name
                 </label>
                 <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2">
@@ -128,7 +128,7 @@ const RegisterPage = () => {
 
             {/* Username */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
                 Username
               </label>
               <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2">
@@ -148,7 +148,7 @@ const RegisterPage = () => {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
                 Email
               </label>
               <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2">
@@ -166,7 +166,7 @@ const RegisterPage = () => {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
                 Password
               </label>
               <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2">
@@ -184,7 +184,7 @@ const RegisterPage = () => {
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
                 Confirm Password
               </label>
               <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2">

@@ -36,25 +36,31 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status;
-    if (status === 401 && !isHandlingUnauthorized) {
+    const hadAuthHeader = Boolean(error?.config?.headers?.Authorization);
+    const hadStoredToken = Boolean(localStorage.getItem("accessToken"));
+    const currentPath = window?.location?.pathname || "";
+    const isAuthRoute = ["/login", "/auth/callback", "/register"].includes(
+      currentPath
+    );
+
+    // Only treat as an expired session if we actually attempted an authenticated request
+    if (
+      status === 401 &&
+      hadAuthHeader &&
+      hadStoredToken &&
+      !isHandlingUnauthorized &&
+      !isAuthRoute
+    ) {
       isHandlingUnauthorized = true;
       try {
-        // Avoid triggering on the login or auth callback routes
-        const currentPath = window?.location?.pathname || "";
-        const isAuthRoute = ["/login", "/auth/callback", "/register"].includes(
-          currentPath
-        );
-
         // Clear any stored credentials
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
 
-        if (!isAuthRoute) {
-          // Notify the user and redirect to login
-          window.alert("Your session has expired. Please log in again.");
-          window.location.href = "/login";
-        }
+        // Notify the user and redirect to login
+        window.alert("Your session has expired. Please log in again.");
+        window.location.href = "/login";
       } finally {
         // Reset the flag after a short delay to prevent rapid duplicate alerts
         setTimeout(() => {
