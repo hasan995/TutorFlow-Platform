@@ -58,8 +58,13 @@ api.interceptors.response.use(
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
 
-        // Notify the user and redirect to login
-        window.alert("Your session has expired. Please log in again.");
+        // Store message for login screen modal and redirect
+        try {
+          localStorage.setItem(
+            "session_expired_message",
+            "Your session has expired. Please log in again."
+          );
+        } catch (_) {}
         window.location.href = "/login";
       } finally {
         // Reset the flag after a short delay to prevent rapid duplicate alerts

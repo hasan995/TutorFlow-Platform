@@ -14,6 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import Review from "../components/Reviews";
+import { toast } from "react-hot-toast";
 
 const CourseDetail = () => {
   const { id } = useParams();
@@ -58,7 +59,7 @@ const CourseDetail = () => {
         navigate("/login");
       } else {
         console.error("Enrollment failed:", err);
-        alert(
+        toast.error(
           err.response?.data?.message ||
             "Enrollment failed. Please try again later."
         );

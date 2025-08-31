@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import Notes from "../components/Notes";
 import { getCourse, createCourseVideo } from "../api/api";
+import { toast } from "react-hot-toast";
 import {
   FileText,
   Video,
@@ -105,7 +106,7 @@ const CourseDetailsPage = () => {
       const msg = e?.response?.data
         ? JSON.stringify(e.response.data)
         : "Failed to add video.";
-      alert(msg);
+      toast.error(msg);
     }
   };
 

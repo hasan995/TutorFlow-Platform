@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getProfile, updateProfile, requestInstructor } from "../api/api";
 import { User, Mail, BadgeCheck, Upload } from "lucide-react";
+import { toast } from "react-hot-toast";
 import InterestsPopup from "../components/Interests";
 
 const ProfilePage = () => {
@@ -79,7 +80,7 @@ const ProfilePage = () => {
       window.location.reload();
     } catch (err) {
       console.error("Failed to update profile", err);
-      alert("Failed to update profile.");
+      toast.error("Failed to update profile.");
       setSaving(false);
     }
   };
@@ -88,10 +89,10 @@ const ProfilePage = () => {
     try {
       setSaving(true);
       await requestInstructor("I would like to teach.");
-      alert("Request submitted. Admin will review it.");
+      toast.success("Request submitted. Admin will review it.");
     } catch (err) {
       console.error("Failed to request instructor", err);
-      alert("Failed to submit request.");
+      toast.error("Failed to submit request.");
     } finally {
       setSaving(false);
     }

@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import Layout from "./layout/Layout";
+import { Toaster } from "react-hot-toast";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/Login";
 import RegisterPage from "./pages/Register";
@@ -70,6 +71,7 @@ function App() {
           />
         </Routes>
       </BrowserRouter>
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
     </NotificationProvider>
   );
 }

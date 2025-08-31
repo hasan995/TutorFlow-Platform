@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Lock, Mail } from "lucide-react";
 import Navbar from "../components/Navbar";
+import SessionExpiredDialog from "../components/SessionExpiredDialog";
 
 import { login, getGoogleAuthUrl } from "../api/api"; // ✅ use your api.js
 
@@ -10,6 +11,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,6 +45,14 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
+
+  // Show session expired dialog if message exists (set by interceptor)
+  React.useEffect(() => {
+    const msg = localStorage.getItem("session_expired_message");
+    if (msg) {
+      setSessionDialogOpen(true);
+    }
+  }, []);
 
   const handleGoogleLogin = async () => {
     try {
@@ -187,6 +197,16 @@ const LoginPage = () => {
           </p>
         </div>
       </section>
+      <SessionExpiredDialog
+        open={sessionDialogOpen}
+        onClose={() => {
+          setSessionDialogOpen(false);
+          try {
+            localStorage.removeItem("session_expired_message");
+          } catch (_) {}
+        }}
+        message={localStorage.getItem("session_expired_message") || undefined}
+      />
     </>
   );
 };
