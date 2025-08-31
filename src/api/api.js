@@ -140,6 +140,51 @@ export const updateProfile = async (data) => {
   return res.data;
 };
 
+// ====== Instructor Request & Admin Approval ======
+export const requestInstructor = async (motivation = "") => {
+  const res = await api.post("auth/instructor/request/", { motivation });
+  return res.data;
+};
+
+export const listInstructorRequests = async () => {
+  const res = await api.get("auth/instructor/requests/");
+  return res.data;
+};
+
+export const approveInstructor = async (requestId) => {
+  const res = await api.post(`auth/instructor/requests/${requestId}/approve/`);
+  return res.data;
+};
+
+export const rejectInstructor = async (requestId, reason = "") => {
+  const res = await api.post(`auth/instructor/requests/${requestId}/reject/`, {
+    reason,
+  });
+  return res.data;
+};
+
+// ====== Course admin approvals ======
+export const listPendingCourses = async () => {
+  const res = await api.get("courses/pending/");
+  return res.data;
+};
+
+export const approveCourse = async (courseId) => {
+  const res = await api.post(`courses/${courseId}/approve/`);
+  return res.data;
+};
+
+export const rejectCourse = async (courseId, reason = "") => {
+  const res = await api.post(`courses/${courseId}/reject/`, { reason });
+  return res.data;
+};
+
+// ====== Admin analytics ======
+export const getAdminSummary = async () => {
+  const res = await api.get("admin/analytics/summary/");
+  return res.data;
+};
+
 // ========== COURSES ENDPOINTS ==========
 
 // List courses
@@ -177,6 +222,12 @@ export const getCourseRcommendation = async (id) => {
 
 export const getUserRecommendation = async () => {
   const res = await api.get(`courses/recommend/`);
+  return res.data;
+};
+
+// ========== ADMIN USERS ==========
+export const listUsers = async (params = {}) => {
+  const res = await api.get("auth/users/", { params });
   return res.data;
 };
 

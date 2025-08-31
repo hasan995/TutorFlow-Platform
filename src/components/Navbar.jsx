@@ -86,6 +86,14 @@ const Navbar = () => {
     { name: "Contact", href: "/contact", icon: <Phone className="h-4 w-4" /> },
   ];
 
+  if (role === "admin") {
+    navLinks.push({
+      name: "Admin",
+      href: "/admin",
+      icon: <GraduationCap className="h-4 w-4" />,
+    });
+  }
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -150,7 +158,11 @@ const Navbar = () => {
                     {isMenuOpen && (
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
                         <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-100">
-                          {role === "instructor" ? "Instructor" : "Student"}
+                          {role === "admin"
+                            ? "Admin"
+                            : role === "instructor"
+                            ? "Instructor"
+                            : "Student"}
                         </div>
                         <a
                           href="/profile"
