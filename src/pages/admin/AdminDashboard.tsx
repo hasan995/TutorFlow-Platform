@@ -323,12 +323,6 @@ const AdminDashboard: React.FC = () => {
         <aside className="md:w-64 shrink-0 mb-6 md:mb-0">
           <nav className="sticky top-20 bg-white rounded-xl shadow p-4 space-y-1">
             <a
-              href="/admin"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50"
-            >
-              <Home className="h-4 w-4" /> Dashboard
-            </a>
-            <a
               href="/"
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50"
             >
