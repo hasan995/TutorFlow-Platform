@@ -282,7 +282,7 @@ const CourseDetail = () => {
               {recs.map((rec) => (
                 <div
                   key={rec.id}
-                  onClick={() => navigate(`/courses/${rec.id}`)}
+                  onClick={() => window.location.assign(`/course/${rec.id}`)}
                   className="relative bg-white rounded-2xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1 cursor-pointer overflow-hidden group w-full max-w-sm"
                 >
                   {/* Category badge */}
