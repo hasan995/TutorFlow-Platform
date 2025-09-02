@@ -17,6 +17,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Skeleton } from "./ui/skeleton";
 
 type CourseSales = { course: string; sales: number; revenue?: number };
 type CategorySales = { name: string; value: number };
@@ -33,53 +34,73 @@ const COLORS = [
   "#84CC16",
 ];
 
-const mockCourseSales: CourseSales[] = [
-  { course: "React Basics", sales: 120, revenue: 4800 },
-  { course: "Advanced TypeScript", sales: 90, revenue: 5400 },
-  { course: "UI/UX Design", sales: 75, revenue: 3750 },
-  { course: "Python ML", sales: 140, revenue: 9800 },
-  { course: "Marketing 101", sales: 65, revenue: 2600 },
-];
+type AnyRecord = Record<string, unknown>;
+const getString = (obj: AnyRecord, keys: string[], fallback = ""): string => {
+  for (const key of keys) {
+    const value = obj[key];
+    if (typeof value === "string" && value.trim().length > 0) return value;
+  }
+  return fallback;
+};
+const getNumber = (obj: AnyRecord, keys: string[]): number => {
+  for (const key of keys) {
+    const value = obj[key];
+    if (typeof value === "number") return value;
+    if (typeof value === "string" && value.length > 0) {
+      const n = Number(value);
+      if (!Number.isNaN(n)) return n;
+    }
+  }
+  return 0;
+};
 
-const mockCategorySales: CategorySales[] = [
-  { name: "Programming", value: 45 },
-  { name: "Design", value: 20 },
-  { name: "Marketing", value: 15 },
-  { name: "Business", value: 10 },
-  { name: "Data", value: 10 },
-];
+const API_BASE = "http://localhost:8000/api/";
+const fetchJson = async (
+  path: string,
+  params?: Record<string, string | number | boolean>
+): Promise<unknown> => {
+  const url = new URL(path, API_BASE);
+  if (params) {
+    Object.entries(params).forEach(([k, v]) =>
+      url.searchParams.set(k, String(v))
+    );
+  }
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch(url.toString(), {
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+  return res.json();
+};
 
-const daysInMonth = 30;
-const mockRevenueLastMonth: RevenuePoint[] = Array.from(
-  { length: daysInMonth },
-  (_, i) => ({
-    date: `${i + 1}`,
-    revenue: Math.round(200 + Math.random() * 400),
-  })
-);
-
-const mockRevenueLast3Months: RevenuePoint[] = Array.from(
-  { length: 12 },
-  (_, i) => ({
-    date: `W${i + 1}`,
-    revenue: Math.round(1200 + Math.random() * 2400),
-  })
-);
+// Start with empty datasets; we'll hydrate from API
+const EMPTY_COURSES: CourseSales[] = [];
+const EMPTY_CATEGORIES: CategorySales[] = [];
+const EMPTY_REVENUE: RevenuePoint[] = [];
 
 type RangeKey = "last_month" | "last_3_months";
 
 const SalesAnalytics: React.FC = () => {
   const [range, setRange] = useState<RangeKey>("last_month");
+  const [courseSales, setCourseSales] = useState<CourseSales[]>(EMPTY_COURSES);
+  const [categorySales, setCategorySales] =
+    useState<CategorySales[]>(EMPTY_CATEGORIES);
+  const [revenueSeries, setRevenueSeries] =
+    useState<RevenuePoint[]>(EMPTY_REVENUE);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const totalRevenue = useMemo(() => {
-    const data =
-      range === "last_month" ? mockRevenueLastMonth : mockRevenueLast3Months;
-    return data.reduce((sum, p) => sum + p.revenue, 0);
-  }, [range]);
+    return revenueSeries.reduce((sum, p) => sum + p.revenue, 0);
+  }, [revenueSeries]);
 
   const prevRevenue = useMemo(() => {
-    const data =
-      range === "last_month" ? mockRevenueLastMonth : mockRevenueLast3Months;
+    const data = revenueSeries;
     const firstHalf = data
       .slice(0, Math.floor(data.length / 2))
       .reduce((s, p) => s + p.revenue, 0);
@@ -87,7 +108,7 @@ const SalesAnalytics: React.FC = () => {
       .slice(Math.floor(data.length / 2))
       .reduce((s, p) => s + p.revenue, 0);
     return { firstHalf, secondHalf };
-  }, [range]);
+  }, [revenueSeries]);
 
   const growthPercent = useMemo(() => {
     if (prevRevenue.firstHalf === 0) return 0;
@@ -98,6 +119,84 @@ const SalesAnalytics: React.FC = () => {
     );
   }, [prevRevenue]);
 
+  useEffect(() => {
+    let ignore = false;
+    const fetchAll = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [coursesRes, categoriesRes, revenueRes] = await Promise.all([
+          fetchJson("admin/sales/courses/").catch(() => null),
+          fetchJson("admin/sales/categories/").catch(() => null),
+          fetchJson("admin/sales/revenue/", { range }).catch(() => null),
+        ]);
+
+        if (!ignore) {
+          // Normalize course sales: expect [{ course/name/title, sales/revenue }]
+          if (coursesRes && Array.isArray(coursesRes)) {
+            const normalized: CourseSales[] = (coursesRes as AnyRecord[]).map(
+              (c) => ({
+                course: getString(c, ["course", "name", "title"], "Unknown"),
+                sales: getNumber(c, ["sales", "count", "revenue"]),
+                revenue: getNumber(c, ["revenue"]) || undefined,
+              })
+            );
+            setCourseSales(normalized);
+          } else {
+            setCourseSales(EMPTY_COURSES);
+          }
+
+          // Normalize category sales: expect [{ category/name, value/sales/percent }]
+          if (categoriesRes && Array.isArray(categoriesRes)) {
+            const normalizedCat: CategorySales[] = (
+              categoriesRes as AnyRecord[]
+            ).map((cat) => ({
+              name: getString(cat, ["category", "name"], "Unknown"),
+              value: getNumber(cat, ["value", "sales", "percent"]),
+            }));
+            setCategorySales(normalizedCat);
+          } else {
+            setCategorySales(EMPTY_CATEGORIES);
+          }
+
+          // Normalize revenue trends: expect { points: [{date, revenue}], total?, growth? } or array
+          if (revenueRes) {
+            const rev = revenueRes as AnyRecord;
+            let points: AnyRecord[] = [];
+            if (Array.isArray(rev)) {
+              points = rev as AnyRecord[];
+            } else if (
+              rev &&
+              Array.isArray((rev as AnyRecord)["points"] as unknown[])
+            ) {
+              points = (rev as AnyRecord)["points"] as AnyRecord[];
+            }
+            const normalizedRev: RevenuePoint[] = points.map((p, idx) => ({
+              date: getString(p, ["date", "day", "week"], String(idx + 1)),
+              revenue: getNumber(p, ["revenue", "amount", "value"]),
+            }));
+            setRevenueSeries(normalizedRev);
+          } else {
+            setRevenueSeries(EMPTY_REVENUE);
+          }
+        }
+      } catch {
+        if (!ignore) {
+          setError("Failed to load analytics.");
+          setCourseSales(EMPTY_COURSES);
+          setCategorySales(EMPTY_CATEGORIES);
+          setRevenueSeries(EMPTY_REVENUE);
+        }
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+    fetchAll();
+    return () => {
+      ignore = true;
+    };
+  }, [range, refreshKey]);
+
   return (
     <div className="space-y-6">
       <Card className="overflow-hidden">
@@ -105,24 +204,47 @@ const SalesAnalytics: React.FC = () => {
           <CardTitle>Sales per Course</CardTitle>
         </CardHeader>
         <CardContent className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={mockCourseSales}
-              margin={{ left: 8, right: 8, top: 8 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
-              <XAxis dataKey="course" tick={{ fontSize: 12 }} tickMargin={8} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Legend />
-              <Bar
-                dataKey="sales"
-                name="Sales"
-                radius={[6, 6, 0, 0]}
-                fill="#6366F1"
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <Skeleton className="h-full w-full" />
+          ) : courseSales.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-gray-500">
+              No data
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={courseSales}
+                margin={{ left: 8, right: 8, top: 8 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
+                <XAxis
+                  dataKey="course"
+                  tick={{ fontSize: 12 }}
+                  tickMargin={8}
+                />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Legend />
+                <Bar
+                  dataKey="sales"
+                  name="Sales"
+                  radius={[6, 6, 0, 0]}
+                  fill="#6366F1"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+          {error && (
+            <div className="mt-3 text-sm text-red-600 flex items-center gap-3">
+              {error}
+              <button
+                onClick={() => setRefreshKey((k) => k + 1)}
+                className="ml-2 px-2 py-1 rounded border border-gray-200 text-gray-700 hover:bg-gray-50"
+              >
+                Retry
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -131,29 +253,48 @@ const SalesAnalytics: React.FC = () => {
           <CardTitle>Sales per Category</CardTitle>
         </CardHeader>
         <CardContent className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Tooltip />
-              <Legend />
-              <Pie
-                data={mockCategorySales}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={4}
+          {loading ? (
+            <Skeleton className="h-full w-full" />
+          ) : categorySales.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-gray-500">
+              No data
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Tooltip />
+                <Legend />
+                <Pie
+                  data={categorySales}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={4}
+                >
+                  {categorySales.map((_, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+          {error && (
+            <div className="mt-3 text-sm text-red-600 flex items-center gap-3">
+              {error}
+              <button
+                onClick={() => setRefreshKey((k) => k + 1)}
+                className="ml-2 px-2 py-1 rounded border border-gray-200 text-gray-700 hover:bg-gray-50"
               >
-                {mockCategorySales.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
+                Retry
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -197,53 +338,94 @@ const SalesAnalytics: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            {range === "last_month" ? (
-              <AreaChart
-                data={mockRevenueLastMonth}
-                margin={{ left: 8, right: 8, top: 8 }}
+          {loading ? (
+            <Skeleton className="h-full w-full" />
+          ) : revenueSeries.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-gray-500">
+              No data
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              {range === "last_month" ? (
+                <AreaChart
+                  data={revenueSeries}
+                  margin={{ left: 8, right: 8, top: 8 }}
+                >
+                  <defs>
+                    <linearGradient
+                      id="colorRevenue"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor="#6366F1"
+                        stopOpacity={0.35}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="#6366F1"
+                        stopOpacity={0.05}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 12 }}
+                    tickMargin={8}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    name="Revenue"
+                    stroke="#6366F1"
+                    fill="url(#colorRevenue)"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              ) : (
+                <LineChart
+                  data={revenueSeries}
+                  margin={{ left: 8, right: 8, top: 8 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 12 }}
+                    tickMargin={8}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    name="Revenue"
+                    stroke="#22C55E"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              )}
+            </ResponsiveContainer>
+          )}
+          {error && (
+            <div className="mt-3 text-sm text-red-600 flex items-center gap-3">
+              {error}
+              <button
+                onClick={() => setRefreshKey((k) => k + 1)}
+                className="ml-2 px-2 py-1 rounded border border-gray-200 text-gray-700 hover:bg-gray-50"
               >
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366F1" stopOpacity={0.35} />
-                    <stop offset="95%" stopColor="#6366F1" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} tickMargin={8} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  name="Revenue"
-                  stroke="#6366F1"
-                  fill="url(#colorRevenue)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            ) : (
-              <LineChart
-                data={mockRevenueLast3Months}
-                margin={{ left: 8, right: 8, top: 8 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} tickMargin={8} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  name="Revenue"
-                  stroke="#22C55E"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            )}
-          </ResponsiveContainer>
+                Retry
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
