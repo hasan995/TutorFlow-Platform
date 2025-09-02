@@ -22,6 +22,7 @@ import {
 import { deleteUser } from "../../api/api.js";
 import { useNotifications } from "../../contexts/NotificationContext";
 import SalesAnalytics from "../../components/SalesAnalytics";
+import ManageCategories from "../../components/ManageCategories";
 
 const Card: React.FC<{ title: string; value: number | string }> = ({
   title,
@@ -33,7 +34,12 @@ const Card: React.FC<{ title: string; value: number | string }> = ({
   </div>
 );
 
-type TabKey = "pending" | "students" | "instructors" | "analytics";
+type TabKey =
+  | "pending"
+  | "students"
+  | "instructors"
+  | "analytics"
+  | "categories";
 type AdminSummary = {
   totals?: { users?: number; instructors?: number; courses?: number };
   pending?: { instructor_requests?: number; courses?: number };
@@ -372,6 +378,7 @@ const AdminDashboard: React.FC = () => {
                   { key: "students", label: "All Students" },
                   { key: "instructors", label: "All Instructors" },
                   { key: "analytics", label: "Sales Analytics" },
+                  { key: "categories", label: "Manage Categories" },
                 ].map((t) => (
                   <button
                     key={t.key}
@@ -909,6 +916,16 @@ const AdminDashboard: React.FC = () => {
                     <div className="grid grid-cols-1 gap-6">
                       <SalesAnalytics />
                     </div>
+                  </motion.div>
+                )}
+                {activeTab === "categories" && (
+                  <motion.div
+                    key="categories"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    <ManageCategories />
                   </motion.div>
                 )}
               </AnimatePresence>

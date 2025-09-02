@@ -212,6 +212,27 @@ export const getRevenueTrends = async (range = "last_month") => {
   return res.data;
 };
 
+// ====== Admin categories (CRUD) ======
+export const adminListCategories = async (params = {}) => {
+  const res = await api.get("admin/categories/", { params });
+  return res.data;
+};
+
+export const adminCreateCategory = async (data) => {
+  const res = await api.post("admin/categories/create/", data);
+  return res.data;
+};
+
+export const adminUpdateCategory = async (id, data) => {
+  const res = await api.put(`admin/categories/${id}/`, data);
+  return res.data;
+};
+
+export const adminDeleteCategory = async (id) => {
+  const res = await api.delete(`admin/categories/${id}/delete/`);
+  return res.data;
+};
+
 // ========== COURSES ENDPOINTS ==========
 
 // List courses
