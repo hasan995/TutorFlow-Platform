@@ -435,3 +435,10 @@ export const createPaymentIntent = async (courseId, data) => {
   );
   return res.data;
 };
+
+//Chat
+
+export const askChat = async (message) => {
+  const res = await api.post(`chatbot/message/`, { message });
+  return res.data;
+};
