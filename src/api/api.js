@@ -196,6 +196,22 @@ export const getAdminSummary = async () => {
   return res.data;
 };
 
+// Sales analytics (to be wired to backend when available)
+export const getSalesPerCourse = async () => {
+  const res = await api.get("admin/sales/courses/");
+  return res.data;
+};
+
+export const getSalesPerCategory = async () => {
+  const res = await api.get("admin/sales/categories/");
+  return res.data;
+};
+
+export const getRevenueTrends = async (range = "last_month") => {
+  const res = await api.get("admin/sales/revenue/", { params: { range } });
+  return res.data;
+};
+
 // ========== COURSES ENDPOINTS ==========
 
 // List courses

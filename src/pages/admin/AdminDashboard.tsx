@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { deleteUser } from "../../api/api.js";
 import { useNotifications } from "../../contexts/NotificationContext";
+import SalesAnalytics from "../../components/SalesAnalytics";
 
 const Card: React.FC<{ title: string; value: number | string }> = ({
   title,
@@ -32,7 +33,7 @@ const Card: React.FC<{ title: string; value: number | string }> = ({
   </div>
 );
 
-type TabKey = "pending" | "students" | "instructors";
+type TabKey = "pending" | "students" | "instructors" | "analytics";
 type AdminSummary = {
   totals?: { users?: number; instructors?: number; courses?: number };
   pending?: { instructor_requests?: number; courses?: number };
@@ -370,6 +371,7 @@ const AdminDashboard: React.FC = () => {
                   { key: "pending", label: "Pending Approvals" },
                   { key: "students", label: "All Students" },
                   { key: "instructors", label: "All Instructors" },
+                  { key: "analytics", label: "Sales Analytics" },
                 ].map((t) => (
                   <button
                     key={t.key}
@@ -895,6 +897,18 @@ const AdminDashboard: React.FC = () => {
                         </AnimatePresence>
                       </tbody>
                     </table>
+                  </motion.div>
+                )}
+                {activeTab === "analytics" && (
+                  <motion.div
+                    key="analytics"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    <div className="grid grid-cols-1 gap-6">
+                      <SalesAnalytics />
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
