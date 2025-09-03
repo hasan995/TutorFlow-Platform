@@ -263,3 +263,4 @@ const ManageCategories: React.FC = () => {
 };
 
 export default ManageCategories;
+
