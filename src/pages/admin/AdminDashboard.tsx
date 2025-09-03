@@ -8,6 +8,7 @@ import {
   rejectInstructor,
   approveCourse,
   rejectCourse,
+  createAdmin,
 } from "../../api/api.js";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -19,10 +20,11 @@ import {
   Video,
   Trash2,
 } from "lucide-react";
-import { deleteUser } from "../../api/api.js";
+import toast from "react-hot-toast";
 import { useNotifications } from "../../contexts/NotificationContext";
 import SalesAnalytics from "../../components/SalesAnalytics";
 import ManageCategories from "../../components/ManageCategories";
+import { deleteUser } from "../../api/api.js";
 
 const Card: React.FC<{ title: string; value: number | string }> = ({
   title,
@@ -38,6 +40,7 @@ type TabKey =
   | "pending"
   | "students"
   | "instructors"
+  | "admins"
   | "analytics"
   | "categories";
 type AdminSummary = {
@@ -107,6 +110,35 @@ const AdminDashboard: React.FC = () => {
   const [instructorStatus, setInstructorStatus] = useState<
     "All" | "Approved" | "Pending"
   >("All");
+  // Admins state
+  const [admins, setAdmins] = useState<
+    Array<{
+      id: number;
+      email: string;
+      username?: string;
+      first_name?: string;
+      last_name?: string;
+      is_superuser?: boolean;
+    }>
+  >([]);
+  const [adminSearch, setAdminSearch] = useState("");
+  const [showCreateAdmin, setShowCreateAdmin] = useState(false);
+  const [adminForm, setAdminForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirm_password: "",
+    role: "admin" as "admin" | "instructor" | "student",
+  });
+  const [adminFormErrors, setAdminFormErrors] = useState<
+    Record<string, string>
+  >({});
+  const currentUserRaw =
+    typeof window !== "undefined" ? localStorage.getItem("user") : null;
+  const currentUser = currentUserRaw ? JSON.parse(currentUserRaw) : null;
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(
+    Boolean(currentUser?.is_superuser)
+  );
   const { notifications } = useNotifications();
   const [pendingTab, setPendingTab] = useState<
     "instructors" | "courses" | "rejected"
@@ -160,8 +192,31 @@ const AdminDashboard: React.FC = () => {
         // no-op
       }
     };
+    const loadAdmins = async () => {
+      try {
+        const data = await listUsers({ role: "admin" });
+        setAdmins(data);
+      } catch {
+        // no-op
+      }
+    };
     loadStudents();
     loadInstructors();
+    loadAdmins();
+  }, []);
+
+  // If local user lacks is_superuser, try to read it from localStorage when it updates
+  useEffect(() => {
+    const handler = () => {
+      try {
+        const raw = localStorage.getItem("user");
+        const u = raw ? JSON.parse(raw) : null;
+        if (u && typeof u.is_superuser === "boolean")
+          setIsSuperAdmin(u.is_superuser);
+      } catch (_) {}
+    };
+    window.addEventListener("userUpdated", handler);
+    return () => window.removeEventListener("userUpdated", handler);
   }, []);
 
   // Refresh pending lists when relevant notifications arrive
@@ -250,6 +305,16 @@ const AdminDashboard: React.FC = () => {
     );
   }, [pendingCourses, courseReqSearch]);
 
+  const filteredAdmins = useMemo(() => {
+    const q = adminSearch.toLowerCase();
+    if (!q) return admins;
+    return admins.filter((u) =>
+      `${u.first_name || ""} ${u.last_name || ""} ${u.email || ""}`
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [admins, adminSearch]);
+
   // Approvals handlers with optimistic UI
   const approveInstructorRow = async (id: number) => {
     setInstructorRequests((prev) => prev.filter((r) => r.id !== id));
@@ -286,6 +351,57 @@ const AdminDashboard: React.FC = () => {
     } catch {
       const fresh = await listPendingCourses();
       setPendingCourses(fresh);
+    }
+  };
+
+  const validateAdminForm = () => {
+    const errs: Record<string, string> = {};
+    const email = adminForm.email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!adminForm.name.trim()) errs.name = "Name is required";
+    if (!email) errs.email = "Email is required";
+    else if (!emailRegex.test(email)) errs.email = "Enter a valid email";
+    if (!adminForm.password) errs.password = "Password is required";
+    else if (adminForm.password.length < 8)
+      errs.password = "At least 8 characters";
+    if (!adminForm.confirm_password)
+      errs.confirm_password = "Confirm your password";
+    else if (adminForm.password !== adminForm.confirm_password)
+      errs.confirm_password = "Passwords do not match";
+    setAdminFormErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const submitCreateAdmin = async () => {
+    if (!validateAdminForm()) return;
+    try {
+      const res = await createAdmin(adminForm);
+      const newUser = res?.user;
+      if (newUser) {
+        if (newUser.role === "admin") setAdmins((prev) => [newUser, ...prev]);
+        if (newUser.role === "student")
+          setStudents((prev) => [newUser, ...prev]);
+        if (newUser.role === "instructor")
+          setInstructors((prev) => [newUser, ...prev]);
+      }
+      setShowCreateAdmin(false);
+      setAdminForm({
+        name: "",
+        email: "",
+        password: "",
+        confirm_password: "",
+        role: "admin",
+      });
+      toast.success("User created successfully");
+    } catch (err: any) {
+      const data = err?.response?.data || {};
+      const errs: Record<string, string> = {};
+      Object.keys(data).forEach((k) => {
+        const v = Array.isArray(data[k]) ? data[k][0] : data[k];
+        if (typeof v === "string") errs[k] = v;
+      });
+      setAdminFormErrors(errs);
+      toast.error(data?.message || "Failed to create user");
     }
   };
 
@@ -377,6 +493,7 @@ const AdminDashboard: React.FC = () => {
                   { key: "pending", label: "Pending Approvals" },
                   { key: "students", label: "All Students" },
                   { key: "instructors", label: "All Instructors" },
+                  { key: "admins", label: "Admins" },
                   { key: "analytics", label: "Sales Analytics" },
                   { key: "categories", label: "Manage Categories" },
                 ].map((t) => (
@@ -926,6 +1043,211 @@ const AdminDashboard: React.FC = () => {
                     exit={{ opacity: 0, y: -8 }}
                   >
                     <ManageCategories />
+                  </motion.div>
+                )}
+                {activeTab === "admins" && (
+                  <motion.div
+                    key="admins"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
+                      <input
+                        value={adminSearch}
+                        onChange={(e) => setAdminSearch(e.target.value)}
+                        placeholder="Search by name or email"
+                        className="w-full md:w-80 px-3 py-2 border rounded"
+                      />
+                      {isSuperAdmin && (
+                        <button
+                          className="ml-auto inline-flex items-center gap-2 bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700"
+                          onClick={() => {
+                            setAdminFormErrors({});
+                            setShowCreateAdmin(true);
+                          }}
+                        >
+                          <UserPlus className="h-4 w-4" /> Create User
+                        </button>
+                      )}
+                    </div>
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="text-gray-600 text-sm">
+                          <th className="py-2">Name</th>
+                          <th className="py-2">Email</th>
+                          <th className="py-2">Role</th>
+                          <th className="py-2">Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <AnimatePresence>
+                          {filteredAdmins.map((a) => (
+                            <motion.tr
+                              key={a.id}
+                              layout
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0 }}
+                              className="border-t"
+                            >
+                              <td className="py-2">
+                                {`${a.first_name || ""} ${
+                                  a.last_name || ""
+                                }`.trim() ||
+                                  a.username ||
+                                  a.email}
+                              </td>
+                              <td className="py-2">{a.email}</td>
+                              <td className="py-2">admin</td>
+                              <td className="py-2">
+                                {a.is_superuser ? "Super Admin" : "Admin"}
+                              </td>
+                            </motion.tr>
+                          ))}
+                        </AnimatePresence>
+                      </tbody>
+                    </table>
+
+                    {/* Create Admin Modal */}
+                    {showCreateAdmin && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                        <div className="bg-white rounded-xl shadow p-6 w-full max-w-md">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold">
+                              Create User
+                            </h3>
+                            <button
+                              className="text-gray-500 hover:text-gray-700"
+                              onClick={() => setShowCreateAdmin(false)}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-1">
+                                Name
+                              </label>
+                              <input
+                                className="w-full px-3 py-2 border rounded"
+                                value={adminForm.name}
+                                onChange={(e) =>
+                                  setAdminForm({
+                                    ...adminForm,
+                                    name: e.target.value,
+                                  })
+                                }
+                                placeholder="Full name"
+                              />
+                              {adminFormErrors.name && (
+                                <p className="text-xs text-red-600 mt-1">
+                                  {adminFormErrors.name}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-1">
+                                Email
+                              </label>
+                              <input
+                                className="w-full px-3 py-2 border rounded"
+                                value={adminForm.email}
+                                onChange={(e) =>
+                                  setAdminForm({
+                                    ...adminForm,
+                                    email: e.target.value,
+                                  })
+                                }
+                                placeholder="email@example.com"
+                              />
+                              {adminFormErrors.email && (
+                                <p className="text-xs text-red-600 mt-1">
+                                  {adminFormErrors.email}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-1">
+                                Password
+                              </label>
+                              <input
+                                type="password"
+                                className="w-full px-3 py-2 border rounded"
+                                value={adminForm.password}
+                                onChange={(e) =>
+                                  setAdminForm({
+                                    ...adminForm,
+                                    password: e.target.value,
+                                  })
+                                }
+                                placeholder="••••••••"
+                              />
+                              {adminFormErrors.password && (
+                                <p className="text-xs text-red-600 mt-1">
+                                  {adminFormErrors.password}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-1">
+                                Confirm Password
+                              </label>
+                              <input
+                                type="password"
+                                className="w-full px-3 py-2 border rounded"
+                                value={adminForm.confirm_password}
+                                onChange={(e) =>
+                                  setAdminForm({
+                                    ...adminForm,
+                                    confirm_password: e.target.value,
+                                  })
+                                }
+                                placeholder="••••••••"
+                              />
+                              {adminFormErrors.confirm_password && (
+                                <p className="text-xs text-red-600 mt-1">
+                                  {adminFormErrors.confirm_password}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-1">
+                                Role
+                              </label>
+                              <select
+                                className="w-full px-3 py-2 border rounded bg-gray-50"
+                                value={adminForm.role}
+                                onChange={(e) =>
+                                  setAdminForm({
+                                    ...adminForm,
+                                    role: e.target.value as any,
+                                  })
+                                }
+                              >
+                                <option value="admin">admin</option>
+                                <option value="instructor">instructor</option>
+                                <option value="student">student</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="mt-5 flex justify-end gap-2">
+                            <button
+                              className="px-4 py-2 rounded border"
+                              onClick={() => setShowCreateAdmin(false)}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                              onClick={submitCreateAdmin}
+                            >
+                              Create
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>

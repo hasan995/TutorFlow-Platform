@@ -279,6 +279,24 @@ export const listUsers = async (params = {}) => {
   return res.data;
 };
 
+// Admin: create a new admin (super-admin only)
+export const createAdmin = async ({
+  name,
+  email,
+  password,
+  confirm_password,
+  role = "admin",
+}) => {
+  const res = await api.post("auth/admin/create/", {
+    name,
+    email,
+    password,
+    confirm_password,
+    role,
+  });
+  return res.data;
+};
+
 // Admin: delete user by id
 export const deleteUser = async (userId) => {
   const res = await api.delete(`auth/users/${userId}/delete/`);
