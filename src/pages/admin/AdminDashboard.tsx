@@ -15,34 +15,22 @@ import {
   Search,
   UserPlus,
   BookOpen,
-  Home,
-  Library,
-  Video,
   Trash2,
+  Users,
+  GraduationCap,
+  CheckSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useNotifications } from "../../contexts/NotificationContext";
 import SalesAnalytics from "../../components/SalesAnalytics";
 import ManageCategories from "../../components/ManageCategories";
+import Sidebar from "../../components/admin/Sidebar";
+import Topbar from "../../components/admin/Topbar";
+import StatCard from "../../components/admin/StatCard";
 import { deleteUser } from "../../api/api.js";
 
-const Card: React.FC<{ title: string; value: number | string }> = ({
-  title,
-  value,
-}) => (
-  <div className="p-6 rounded-xl bg-white shadow">
-    <div className="text-sm text-gray-500">{title}</div>
-    <div className="mt-2 text-2xl font-semibold">{value}</div>
-  </div>
-);
+// Deprecated local Card removed after redesign
 
-type TabKey =
-  | "pending"
-  | "students"
-  | "instructors"
-  | "admins"
-  | "analytics"
-  | "categories";
 type AdminSummary = {
   totals?: { users?: number; instructors?: number; courses?: number };
   pending?: { instructor_requests?: number; courses?: number };
@@ -83,11 +71,23 @@ type InstructorUser = {
   status?: "Approved" | "Pending";
 };
 
+type SidebarKey =
+  | "home"
+  | "courses"
+  | "sessions"
+  | "students"
+  | "instructors"
+  | "pending"
+  | "categories"
+  | "analytics"
+  | "admins"
+  | "settings";
+
 const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<AdminSummary | null>(null);
-  const [activeTab, setActiveTab] = useState<TabKey>("pending");
+  const [section, setSection] = useState<SidebarKey>("home");
 
   // Pending approvals state
   const [instructorRequests, setInstructorRequests] = useState<
@@ -213,7 +213,9 @@ const AdminDashboard: React.FC = () => {
         const u = raw ? JSON.parse(raw) : null;
         if (u && typeof u.is_superuser === "boolean")
           setIsSuperAdmin(u.is_superuser);
-      } catch (_) {}
+      } catch {
+        // ignore
+      }
     };
     window.addEventListener("userUpdated", handler);
     return () => window.removeEventListener("userUpdated", handler);
@@ -393,15 +395,32 @@ const AdminDashboard: React.FC = () => {
         role: "admin",
       });
       toast.success("User created successfully");
-    } catch (err: any) {
-      const data = err?.response?.data || {};
+    } catch (err) {
+      const extractErrorData = (e: unknown): Record<string, unknown> => {
+        if (typeof e === "object" && e !== null) {
+          const maybe = e as { response?: { data?: Record<string, unknown> } };
+          if (
+            maybe.response &&
+            typeof maybe.response.data === "object" &&
+            maybe.response.data
+          ) {
+            return maybe.response.data as Record<string, unknown>;
+          }
+        }
+        return {};
+      };
+      const data = extractErrorData(err);
       const errs: Record<string, string> = {};
       Object.keys(data).forEach((k) => {
         const v = Array.isArray(data[k]) ? data[k][0] : data[k];
         if (typeof v === "string") errs[k] = v;
       });
       setAdminFormErrors(errs);
-      toast.error(data?.message || "Failed to create user");
+      const message =
+        typeof (data as Record<string, unknown>).message === "string"
+          ? ((data as Record<string, unknown>).message as string)
+          : "Failed to create user";
+      toast.error(message);
     }
   };
 
@@ -439,88 +458,96 @@ const AdminDashboard: React.FC = () => {
   const btnApprove = `${btnBase} bg-green-600 text-white hover:bg-green-700 active:bg-green-800`;
   const btnReject = `${btnBase} bg-red-600 text-white hover:bg-red-700 active:bg-red-800`;
 
+  // Navigation handlers for the fixed sidebar
+  const sidebarActiveKey: string | undefined = section;
+
+  const handleSidebarNavigate = (key: SidebarKey) => {
+    switch (key) {
+      case "pending":
+        setSection("pending");
+        break;
+      case "students":
+        setSection("students");
+        break;
+      case "instructors":
+        setSection("instructors");
+        break;
+      case "categories":
+        setSection("categories");
+        break;
+      case "analytics":
+        setSection("analytics");
+        break;
+      case "home":
+        setSection("home");
+        break;
+      case "courses":
+        window.location.href = "/courses";
+        break;
+      case "sessions":
+        window.location.href = "/sessions";
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleTopSearch = (q: string) => {
+    if (section === "students") setStudentSearch(q);
+    else if (section === "instructors") setInstructorSearch(q);
+    else if (section === "pending") setInstructorReqSearch(q);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6 md:flex md:gap-6">
-        {/* Sidebar navigation to other routes */}
-        <aside className="md:w-64 shrink-0 mb-6 md:mb-0">
-          <nav className="sticky top-20 bg-white rounded-xl shadow p-4 space-y-1">
-            <a
-              href="/"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50"
-            >
-              <Home className="h-4 w-4" /> Home
-            </a>
-            <a
-              href="/courses"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50"
-            >
-              <Library className="h-4 w-4" /> Courses
-            </a>
-            <a
-              href="/sessions"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50"
-            >
-              <Video className="h-4 w-4" /> Sessions
-            </a>
-          </nav>
-        </aside>
-
-        {/* Main content */}
-        <div className="flex-1 space-y-6">
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card title="Users" value={summary?.totals?.users || 0} />
-            <Card
+      <Sidebar
+        activeKey={sidebarActiveKey}
+        onNavigate={handleSidebarNavigate}
+      />
+      <Topbar title="Admin Dashboard" onSearch={handleTopSearch} />
+      <div className="px-4 md:pl-72 max-w-7xl mx-auto py-6">
+        {/* Home summary only when Home is selected */}
+        {section === "home" && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <StatCard
+              title="Users"
+              value={summary?.totals?.users || 0}
+              icon={<Users className="h-5 w-5" />}
+              color="indigo"
+              delta={{ value: 0, positive: true }}
+            />
+            <StatCard
               title="Instructors"
               value={summary?.totals?.instructors || 0}
+              icon={<GraduationCap className="h-5 w-5" />}
+              color="emerald"
+              delta={{ value: 0, positive: true }}
             />
-            <Card title="Courses" value={summary?.totals?.courses || 0} />
-            <Card
+            <StatCard
+              title="Courses"
+              value={summary?.totals?.courses || 0}
+              icon={<BookOpen className="h-5 w-5" />}
+              color="amber"
+              delta={{ value: 0, positive: true }}
+            />
+            <StatCard
               title="Pending Requests"
               value={
                 (summary?.pending?.instructor_requests || 0) +
                 (summary?.pending?.courses || 0)
               }
+              icon={<CheckSquare className="h-5 w-5" />}
+              color="rose"
+              delta={{ value: 0, positive: false }}
             />
           </div>
+        )}
 
-          <div className="rounded-xl bg-white shadow">
-            <div className="border-b px-4">
-              <div className="flex gap-4">
-                {[
-                  { key: "pending", label: "Pending Approvals" },
-                  { key: "students", label: "All Students" },
-                  { key: "instructors", label: "All Instructors" },
-                  { key: "admins", label: "Admins" },
-                  { key: "analytics", label: "Sales Analytics" },
-                  { key: "categories", label: "Manage Categories" },
-                ].map((t) => (
-                  <button
-                    key={t.key}
-                    onClick={() => setActiveTab(t.key as TabKey)}
-                    className={`relative py-3 px-4 -mb-px font-medium ${
-                      activeTab === t.key
-                        ? "text-blue-600"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    {t.label}
-                    {activeTab === t.key && (
-                      <motion.div
-                        layoutId="tab-underline"
-                        className="absolute left-0 right-0 -bottom-px h-0.5 bg-blue-600"
-                      />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className={`lg:col-span-3 rounded-xl bg-white shadow`}>
             <div className="p-6">
               <AnimatePresence mode="wait">
-                {activeTab === "pending" && (
+                {section === "pending" && (
                   <motion.div
                     key="pending"
                     initial={{ opacity: 0, y: 8 }}
@@ -529,14 +556,22 @@ const AdminDashboard: React.FC = () => {
                   >
                     <div className="mb-4 border-b px-1">
                       <div className="flex gap-4">
-                        {[
-                          { key: "instructors", label: "Instructor Requests" },
-                          { key: "rejected", label: "Rejected Instructors" },
-                          { key: "courses", label: "Course Requests" },
-                        ].map((t) => (
+                        {(
+                          [
+                            {
+                              key: "instructors",
+                              label: "Instructor Requests",
+                            },
+                            { key: "rejected", label: "Rejected Instructors" },
+                            { key: "courses", label: "Course Requests" },
+                          ] as Array<{
+                            key: "instructors" | "rejected" | "courses";
+                            label: string;
+                          }>
+                        ).map((t) => (
                           <button
                             key={t.key}
-                            onClick={() => setPendingTab(t.key as any)}
+                            onClick={() => setPendingTab(t.key)}
                             className={`relative py-2 px-3 -mb-px text-sm font-medium ${
                               pendingTab === t.key
                                 ? "text-blue-600"
@@ -833,7 +868,7 @@ const AdminDashboard: React.FC = () => {
                   </motion.div>
                 )}
 
-                {activeTab === "students" && (
+                {section === "students" && (
                   <motion.div
                     key="students"
                     initial={{ opacity: 0, y: 8 }}
@@ -913,9 +948,9 @@ const AdminDashboard: React.FC = () => {
                                     );
                                     try {
                                       await deleteUser(s.id as number);
-                                    } catch (e) {
+                                    } catch {
                                       // revert on failure
-                                      setStudents(snapshot as any);
+                                      setStudents(snapshot as StudentUser[]);
                                     }
                                   }}
                                 >
@@ -929,8 +964,7 @@ const AdminDashboard: React.FC = () => {
                     </table>
                   </motion.div>
                 )}
-
-                {activeTab === "instructors" && (
+                {section === "instructors" && (
                   <motion.div
                     key="instructors"
                     initial={{ opacity: 0, y: 8 }}
@@ -1007,9 +1041,11 @@ const AdminDashboard: React.FC = () => {
                                     );
                                     try {
                                       await deleteUser(i.id as number);
-                                    } catch (e) {
+                                    } catch {
                                       // revert on failure
-                                      setInstructors(snapshot as any);
+                                      setInstructors(
+                                        snapshot as InstructorUser[]
+                                      );
                                     }
                                   }}
                                 >
@@ -1023,19 +1059,17 @@ const AdminDashboard: React.FC = () => {
                     </table>
                   </motion.div>
                 )}
-                {activeTab === "analytics" && (
+                {section === "analytics" && (
                   <motion.div
                     key="analytics"
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                   >
-                    <div className="grid grid-cols-1 gap-6">
-                      <SalesAnalytics />
-                    </div>
+                    <SalesAnalytics />
                   </motion.div>
                 )}
-                {activeTab === "categories" && (
+                {section === "categories" && (
                   <motion.div
                     key="categories"
                     initial={{ opacity: 0, y: 8 }}
@@ -1045,7 +1079,7 @@ const AdminDashboard: React.FC = () => {
                     <ManageCategories />
                   </motion.div>
                 )}
-                {activeTab === "admins" && (
+                {section === "admins" && (
                   <motion.div
                     key="admins"
                     initial={{ opacity: 0, y: 8 }}
@@ -1221,7 +1255,10 @@ const AdminDashboard: React.FC = () => {
                                 onChange={(e) =>
                                   setAdminForm({
                                     ...adminForm,
-                                    role: e.target.value as any,
+                                    role: e.target.value as
+                                      | "admin"
+                                      | "instructor"
+                                      | "student",
                                   })
                                 }
                               >
@@ -1253,6 +1290,7 @@ const AdminDashboard: React.FC = () => {
               </AnimatePresence>
             </div>
           </div>
+          {/* Activity feed removed as requested; analytics now uses full width */}
         </div>
       </div>
     </div>
