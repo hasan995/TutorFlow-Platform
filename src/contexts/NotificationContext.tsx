@@ -5,6 +5,7 @@ import React, {
   useState,
   useCallback,
 } from "react";
+import api from "../api/api";
 
 interface Notification {
   id: number;
@@ -68,10 +69,22 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       // Add a small delay to ensure server is ready
       const connectTimeout = setTimeout(() => {
         try {
+          // Derive WebSocket URL from API base URL or window location
+          const apiBase = (api.defaults?.baseURL || "").replace(/\/+$/, "");
+          const wsUrl = (() => {
+            try {
+              const parsed = new URL(apiBase || window.location.origin);
+              const proto = parsed.protocol === "https:" ? "wss:" : "ws:";
+              return `${proto}//${parsed.host}/ws/notifications/`;
+            } catch {
+              const fallbackProto =
+                window.location.protocol === "https:" ? "wss:" : "ws:";
+              return `${fallbackProto}//${window.location.host}/ws/notifications/`;
+            }
+          })();
+
           // Create native WebSocket connection
-          const newSocket = new WebSocket(
-            `ws://localhost:8000/ws/notifications/`
-          );
+          const newSocket = new WebSocket(wsUrl);
 
           newSocket.onopen = () => {
             console.log("🔔 Connected to notification WebSocket");
@@ -149,8 +162,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
           setSocket(newSocket);
 
           // Request notification permission
-          if (Notification.permission === "default") {
-            Notification.requestPermission();
+          if (
+            window.Notification &&
+            window.Notification.permission === "default"
+          ) {
+            window.Notification.requestPermission();
           }
         } catch (error) {
           console.error("🔔 Error creating WebSocket:", error);
@@ -174,15 +190,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         const token = localStorage.getItem("accessToken");
         if (!token) return;
 
-        const response = await fetch(
-          "http://localhost:8000/api/notifications/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const apiBase = (api.defaults?.baseURL || "").replace(/\/+$/, "");
+        const response = await fetch(`${apiBase}/notifications/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
         if (response.ok) {
           const data = await response.json();
@@ -201,8 +215,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       const token = localStorage.getItem("accessToken");
       if (!token) return;
 
+      const apiBase = (api.defaults?.baseURL || "").replace(/\/+$/, "");
       const response = await fetch(
-        `http://localhost:8000/api/notifications/${id}/mark_read/`,
+        `${apiBase}/notifications/${id}/mark_read/`,
         {
           method: "PATCH",
           headers: {
@@ -227,16 +242,14 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       const token = localStorage.getItem("accessToken");
       if (!token) return;
 
-      const response = await fetch(
-        "http://localhost:8000/api/notifications/mark_all_read/",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const apiBase = (api.defaults?.baseURL || "").replace(/\/+$/, "");
+      const response = await fetch(`${apiBase}/notifications/mark_all_read/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.ok) {
         setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
