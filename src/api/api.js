@@ -3,7 +3,7 @@ import axios from "axios";
 
 // Base instance
 const api = axios.create({
-  baseURL: "http://localhost:8000/api/",
+  baseURL: "https://educational-platform-production.up.railway.app/api/",
   headers: {
     "Content-Type": "application/json",
   },
